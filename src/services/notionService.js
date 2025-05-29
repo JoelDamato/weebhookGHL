@@ -8,9 +8,7 @@ const databaseId = process.env.NOTION_DATABASE_ID;
 function mapDataToNotionProperties(data) {
   return {
     Nombre: data.full_name
-      ? {
-          title: [{ text: { content: data.full_name } }]
-        }
+      ? { title: [{ text: { content: data.full_name } }] }
       : undefined,
 
     Telefono: data.phone
@@ -41,8 +39,8 @@ function mapDataToNotionProperties(data) {
       ? { rich_text: [{ text: { content: data.utm_campaign } }] }
       : undefined,
 
-    utm_medium: data.contact.utm_medium
-      ? { rich_text: [{ text: { content: data.contact.utm_medium } }] }
+    utm_medium: data.utm_medium
+      ? { rich_text: [{ text: { content: data.utm_medium } }] }
       : undefined,
 
     Temperatura: data.Temperatura
@@ -58,6 +56,8 @@ function mapDataToNotionProperties(data) {
       : undefined
   };
 }
+
+
 
 exports.createNotionContact = async (data) => {
   const properties = mapDataToNotionProperties(data);
