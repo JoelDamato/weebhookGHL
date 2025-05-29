@@ -1,8 +1,7 @@
 const mongoose = require('mongoose');
 
-// models/contacto.js
 const contactoSchema = new mongoose.Schema({
-  contact_id: String,
+  contact_id: { type: String, required: true, unique: true },
   first_name: String,
   last_name: String,
   full_name: String,
@@ -28,7 +27,6 @@ const contactoSchema = new mongoose.Schema({
     postalCode: String,
     fullAddress: String,
     id: String,
-    notion_id: String
   },
   workflow: {
     id: String,
@@ -36,6 +34,7 @@ const contactoSchema = new mongoose.Schema({
   },
   triggerData: Object,
   customData: Object,
+  notion_id: String  // 👈 Al nivel raíz, no dentro de location
 });
 
 module.exports = mongoose.model('Contacto', contactoSchema);

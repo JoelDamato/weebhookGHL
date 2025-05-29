@@ -1,11 +1,10 @@
-// src/services/notionService.js
 const { Client } = require('@notionhq/client');
 require('dotenv').config();
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const databaseId = process.env.NOTION_DATABASE_ID;
 
-// Función para mapear los datos de GHL a propiedades de Notion
+// Map GHL data to Notion properties
 function mapDataToNotionProperties(data) {
   return {
     Nombre: {
@@ -18,10 +17,10 @@ function mapDataToNotionProperties(data) {
       ]
     },
     Telefono: {
-      phone_number: data.phone || ''
+      rich_text: data.phone || ''
     },
     Estado: {
-      rich_text: [
+      select: [
         {
           text: {
             content: data.tags || ''
@@ -75,7 +74,7 @@ function mapDataToNotionProperties(data) {
       ]
     },
     Temperatura: {
-      rich_text: [
+      select: [
         {
           text: {
             content: data.Temperatura || ''
@@ -98,19 +97,23 @@ function mapDataToNotionProperties(data) {
   };
 }
 
-exports.crearEnNotion = async (data) => {
+// Crear nuevo registro en Notion
+exports.createNotionContact = async (data) => {
   const properties = mapDataToNotionProperties(data);
   const response = await notion.pages.create({
     parent: { database_id: databaseId },
     properties
   });
+  console.log('✅ Creado en Notion:', response.id);
   return response.id;
 };
 
-exports.actualizarEnNotion = async (pageId, data) => {
+// Actualizar registro existente en Notion
+exports.updateNotionContact = async (pageId, data) => {
   const properties = mapDataToNotionProperties(data);
   await notion.pages.update({
     page_id: pageId,
     properties
   });
+  console.log('♻️ Actualizado en Notion:', pageId);
 };
