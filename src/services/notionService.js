@@ -7,86 +7,53 @@ const databaseId = process.env.NOTION_DATABASE_ID;
 // Map GHL data to Notion properties (actualizado para selects y phone)
 function mapDataToNotionProperties(data) {
   return {
-    Nombre: {
-      title: [
-        {
-          text: {
-            content: data.full_name || ''
-          }
+    Nombre: data.full_name
+      ? {
+          title: [{ text: { content: data.full_name } }]
         }
-      ]
-    },
-    Telefono: {
-      phone_number: data.phone || null
-    },
-    Estado: {
-      select: data.tags ? { name: data.tags } : undefined
-    },
-    ghl_id: {
-      rich_text: [
-        {
-          text: {
-            content: data.contact_id || ''
-          }
-        }
-      ]
-    },
-    utm_content: {
-      rich_text: [
-        {
-          text: {
-            content: data.utm_content || ''
-          }
-        }
-      ]
-    },
-    utm_source: {
-      rich_text: [
-        {
-          text: {
-            content: data.utm_source || ''
-          }
-        }
-      ]
-    },
-    fbclid: {
-      rich_text: [
-        {
-          text: {
-            content: data.fbclid || ''
-          }
-        }
-      ]
-    },
-    utm_campaign: {
-      rich_text: [
-        {
-          text: {
-            content: data.utm_campaign || ''
-          }
-        }
-      ]
-    },
-    Temperatura: {
-      select: data.Temperatura ? { name: data.Temperatura } : undefined
-    },
-    utm_term: {
-      rich_text: [
-        {
-          text: {
-            content: data.utm_term || ''
-          }
-        }
-      ]
-    },
-    Mail: {
-      // Cambiado: si no hay email, poner null, no string vacío
-      email: data.email && data.email.trim() !== '' ? data.email : null
-    }
+      : undefined,
+
+    Telefono: data.phone
+      ? { phone_number: data.phone }
+      : undefined,
+
+    Estado: data.tags
+      ? { select: { name: data.tags } }
+      : undefined,
+
+    ghl_id: data.contact_id
+      ? { rich_text: [{ text: { content: data.contact_id } }] }
+      : undefined,
+
+    utm_content: data.utm_content
+      ? { rich_text: [{ text: { content: data.utm_content } }] }
+      : undefined,
+
+    utm_source: data.utm_source
+      ? { rich_text: [{ text: { content: data.utm_source } }] }
+      : undefined,
+
+    fbclid: data.fbclid
+      ? { rich_text: [{ text: { content: data.fbclid } }] }
+      : undefined,
+
+    utm_campaign: data.utm_campaign
+      ? { rich_text: [{ text: { content: data.utm_campaign } }] }
+      : undefined,
+
+    Temperatura: data.Temperatura
+      ? { select: { name: data.Temperatura } }
+      : undefined,
+
+    utm_term: data.utm_term
+      ? { rich_text: [{ text: { content: data.utm_term } }] }
+      : undefined,
+
+    Mail: data.email && data.email.trim() !== ''
+      ? { email: data.email }
+      : undefined
   };
 }
-
-
 
 exports.createNotionContact = async (data) => {
   const properties = mapDataToNotionProperties(data);
