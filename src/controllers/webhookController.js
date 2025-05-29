@@ -1,4 +1,4 @@
-require('../src/db'); // conecta Mongo apenas se llama este archivo
+require('../db'); // conecta Mongo apenas se llama este archivo
 const Contacto = require('../models/Contacto');
 
 exports.handleWebhook = async (req, res) => {

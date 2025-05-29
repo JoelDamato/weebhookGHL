@@ -2,7 +2,7 @@ require('./db'); // ✅ conexión a Mongo
 
 const express = require('express');
 const bodyParser = require('body-parser');
-const webhookController = require('../controllers/webhookController');
+const webhookController = require('./controllers/webhookController');
 
 
 const app = express();
