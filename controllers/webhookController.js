@@ -1,6 +1,4 @@
-// src/controllers/webhookController.js
-
-require('../src/db'); // ✅ Conexión a MongoDB
+require('../src/db'); // conecta Mongo apenas se llama este archivo
 const Contacto = require('../models/Contacto');
 
 exports.handleWebhook = async (req, res) => {
@@ -10,7 +8,6 @@ exports.handleWebhook = async (req, res) => {
   const { contact_id } = req.body;
 
   try {
-    // Buscar si ya existe por contact_id
     const contactoExistente = await Contacto.findOne({ contact_id });
 
     if (contactoExistente) {
@@ -18,11 +15,10 @@ exports.handleWebhook = async (req, res) => {
       return res.status(200).send({ message: 'Contacto ya registrado' });
     }
 
-    // Si no existe, guardar
     const nuevoContacto = new Contacto(req.body);
     await nuevoContacto.save();
-    console.log('✅ Contacto guardado en MongoDB');
 
+    console.log('✅ Contacto guardado en MongoDB');
     res.status(200).send({ message: 'Contacto nuevo guardado' });
   } catch (error) {
     console.error('❌ Error al procesar el webhook:', error);
