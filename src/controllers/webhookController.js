@@ -1,3 +1,4 @@
+require('../db'); // conexión MongoDB
 const Contacto = require('../models/contacto');
 const { createNotionContact, updateNotionContact } = require('../services/notionService');
 require('../db');
