@@ -1,6 +1,6 @@
-// models/Contacto.js
 const mongoose = require('mongoose');
 
+// models/contacto.js
 const contactoSchema = new mongoose.Schema({
   contact_id: String,
   first_name: String,
@@ -27,14 +27,14 @@ const contactoSchema = new mongoose.Schema({
     country: String,
     postalCode: String,
     fullAddress: String,
-    id: String
+    id: String,
   },
   workflow: {
     id: String,
     name: String
   },
   triggerData: Object,
-  customData: Object
+  customData: Object,
 });
 
 module.exports = mongoose.model('Contacto', contactoSchema);
