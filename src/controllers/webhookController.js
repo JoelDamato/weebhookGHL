@@ -7,19 +7,23 @@ exports.handleWebhook = async (req, res) => {
   console.log(JSON.stringify(req.body, null, 2));
 
   const { contact_id } = req.body;
+console.log('[INICIO] Recibido webhook:', JSON.stringify(req.body, null, 2));
 
   try {
     let contacto = await Contacto.findOne({ contact_id });
+console.log('[MONGO] Resultado búsqueda en Mongo:', contacto);
 
     if (!contacto) {
       // 🆕 No existe, crear en Mongo y en Notion
       const nuevoContacto = new Contacto(req.body);
       await nuevoContacto.save();
+console.log('[NOTION] Intentando crear en Notion...');
 
       // Crear en Notion y guardar el ID
       const notionId = await createNotionContact(req.body);
       nuevoContacto.notion_id = notionId;
       await nuevoContacto.save();
+console.log('[NOTION] Creado en Notion con ID:', notionId);
 
       console.log('✅ Contacto nuevo creado en MongoDB y Notion');
       return res.status(200).send({ message: 'Contacto nuevo creado en MongoDB y Notion', notion_id: notionId });
