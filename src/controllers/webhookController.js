@@ -5,8 +5,7 @@ const { createNotionContact, updateNotionContact } = require('../services/notion
 // Extrae UTM desde plano o anidado
 const getUtm = (data, key) => (
   data[key] ||
-  data.contact?.attributionSource?.[key] ||
-  data.contact?.attributionSource?.sessionSource // Para IG/Fb Ads, solo para utm_medium
+  data.contact?.attributionSource?.[key]
 );
 
 // Devuelve un objeto con los utm normalizados + el resto del body
@@ -20,8 +19,7 @@ function buildContactoData(body) {
     utm_term: getUtm(body, 'utm_term'),
     utm_medium:
       getUtm(body, 'utm_medium') ||
-      body.contact?.attributionSource?.medium ||
-      body.contact?.attributionSource?.sessionSource, // IG/Fb Ads
+      body.contact?.attributionSource?.medium,
   };
 }
 
