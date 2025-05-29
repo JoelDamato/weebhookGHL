@@ -17,7 +17,7 @@ function mapDataToNotionProperties(data) {
       ]
     },
     Telefono: {
-      phone_number: data.phone || ''
+      phone_number: data.phone || null
     },
     Estado: {
       select: data.tags ? { name: data.tags } : undefined
@@ -80,10 +80,12 @@ function mapDataToNotionProperties(data) {
       ]
     },
     Mail: {
-      email: data.email || ''
+      // Cambiado: si no hay email, poner null, no string vacío
+      email: data.email && data.email.trim() !== '' ? data.email : null
     }
   };
 }
+
 
 
 exports.createNotionContact = async (data) => {
