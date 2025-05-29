@@ -28,6 +28,7 @@ const contactoSchema = new mongoose.Schema({
     postalCode: String,
     fullAddress: String,
     id: String,
+    notion_id: String
   },
   workflow: {
     id: String,
