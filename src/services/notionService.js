@@ -4,7 +4,7 @@ require('dotenv').config();
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const databaseId = process.env.NOTION_DATABASE_ID;
 
-// Map GHL data to Notion properties
+// Map GHL data to Notion properties (actualizado para selects y phone)
 function mapDataToNotionProperties(data) {
   return {
     Nombre: {
@@ -17,16 +17,10 @@ function mapDataToNotionProperties(data) {
       ]
     },
     Telefono: {
-      rich_text: data.phone || ''
+      phone_number: data.phone || ''
     },
     Estado: {
-      select: [
-        {
-          text: {
-            content: data.tags || ''
-          }
-        }
-      ]
+      select: data.tags ? { name: data.tags } : undefined
     },
     ghl_id: {
       rich_text: [
@@ -74,13 +68,7 @@ function mapDataToNotionProperties(data) {
       ]
     },
     Temperatura: {
-      select: [
-        {
-          text: {
-            content: data.Temperatura || ''
-          }
-        }
-      ]
+      select: data.Temperatura ? { name: data.Temperatura } : undefined
     },
     utm_term: {
       rich_text: [
@@ -97,7 +85,7 @@ function mapDataToNotionProperties(data) {
   };
 }
 
-// Crear nuevo registro en Notion
+
 exports.createNotionContact = async (data) => {
   const properties = mapDataToNotionProperties(data);
   const response = await notion.pages.create({
@@ -108,7 +96,6 @@ exports.createNotionContact = async (data) => {
   return response.id;
 };
 
-// Actualizar registro existente en Notion
 exports.updateNotionContact = async (pageId, data) => {
   const properties = mapDataToNotionProperties(data);
   await notion.pages.update({
