@@ -1,3 +1,5 @@
+require('../src/db'); // o './src/db' si estás en index.js
+
 exports.handleWebhook = (req, res) => {
   console.log('📩 Webhook recibido desde GHL:');
   console.log(JSON.stringify(req.body, null, 2)); // imprime el JSON bonito
