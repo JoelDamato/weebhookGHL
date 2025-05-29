@@ -1,12 +1,6 @@
-require('../src/db'); // o './src/db' si estás en index.js
-
-exports.handleWebhook = (req, res) => {
-  console.log('📩 Webhook recibido desde GHL:');
-  console.log(JSON.stringify(req.body, null, 2)); // imprime el JSON bonito
-
-  res.status(200).send({ message: 'Webhook recibido correctamente' });
-};
 // src/controllers/webhookController.js
+
+require('../src/db'); // ✅ Conexión a MongoDB
 const Contacto = require('../models/Contacto');
 
 exports.handleWebhook = async (req, res) => {
