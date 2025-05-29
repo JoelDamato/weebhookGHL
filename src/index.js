@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const webhookController = require('./controllers/webhookController');
+const webhookController = require('../controllers/webhookController');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
