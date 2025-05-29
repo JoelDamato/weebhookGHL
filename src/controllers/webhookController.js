@@ -1,3 +1,8 @@
+exports.handleWebhook = async (req, res) => {
+  console.log('🟡 [DEBUG] Entró al handleWebhook de /webhook');
+
+
+
 require('../db'); // conexión MongoDB
 const Contacto = require('../models/contacto');
 const { createNotionContact, updateNotionContact } = require('../services/notionService');
@@ -49,4 +54,5 @@ console.log('[NOTION] Creado en Notion con ID:', notionId);
     console.error('❌ Error al procesar el webhook:', error);
     res.status(500).send({ error: 'Error interno del servidor' });
   }
+};
 };
