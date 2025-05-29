@@ -41,6 +41,10 @@ function mapDataToNotionProperties(data) {
       ? { rich_text: [{ text: { content: data.utm_campaign } }] }
       : undefined,
 
+    utm_medium: data.utm_medium
+      ? { rich_text: [{ text: { content: data.utm_medium } }] }
+      : undefined,
+
     Temperatura: data.Temperatura
       ? { select: { name: data.Temperatura } }
       : undefined,

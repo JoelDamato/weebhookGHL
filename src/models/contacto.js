@@ -14,6 +14,7 @@ const contactoSchema = new mongoose.Schema({
   contact_type: String,
   utm_content: String,
   utm_source: String,
+  utm_medium: String,
   fbclid: String,
   utm_campaign: String,
   Temperatura: String,
