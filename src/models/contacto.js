@@ -36,4 +36,4 @@ const WebhookSchema = new mongoose.Schema({
   triggerData: Object
 }, { strict: false }); // permite también guardar cualquier campo no definido
 
-module.exports = mongoose.model('CRMBDD', WebhookSchema, 'webhooks');
+module.exports = mongoose.model('CRMBDD', WebhookSchema, 'CRMBDDS');

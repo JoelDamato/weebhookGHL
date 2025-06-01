@@ -42,6 +42,7 @@ exports.handleWebhook = async (req, res) => {
       const nuevoContacto = new Contacto(contactoData);
       await nuevoContacto.save();
       console.log('[NOTION] Intentando crear en Notion...');
+      contactoData._id = String(nuevoContacto._id);
 
       // Crear en Notion y guardar el ID
       const notionId = await createNotionContact(contactoData);
