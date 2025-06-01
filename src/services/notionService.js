@@ -22,9 +22,12 @@ function mapDataToNotionProperties(data) {
       ? { phone_number: data.phone }
       : undefined,
 
-    Etiqueta: data.tags
-      ? { select: { name: data.tags } }
-      : undefined,
+  Etiqueta: Array.isArray(data.tags)
+  ? { multi_select: data.tags.map(tag => ({ name: tag })) }
+  : data.tags
+    ? { multi_select: [{ name: data.tags }] } // por si llega un solo string
+    : undefined,
+
 
     ghl_id: data.contact_id
       ? { rich_text: [{ text: { content: data.contact_id } }] }
