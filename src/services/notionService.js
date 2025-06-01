@@ -4,7 +4,6 @@ require('dotenv').config();
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const databaseId = process.env.NOTION_DATABASE_ID;
 
-// Map GHL data to Notion properties (actualizado para selects y phone)
 function mapDataToNotionProperties(data) {
   return {
     Nombre: data.full_name
@@ -15,7 +14,7 @@ function mapDataToNotionProperties(data) {
       ? { phone_number: data.phone }
       : undefined,
 
-    Estado: data.tags
+    Etiqueta: data.tags
       ? { select: { name: data.tags } }
       : undefined,
 
@@ -53,11 +52,37 @@ function mapDataToNotionProperties(data) {
 
     Mail: data.email && data.email.trim() !== ''
       ? { email: data.email }
+      : undefined,
+
+    Embudo_1: data.Embudo_1
+      ? { select: { name: data.Embudo_1 } }
+      : undefined,
+
+    Estrategia: Array.isArray(data.Estrategia)
+      ? { multi_select: data.Estrategia.map(item => ({ name: item })) }
+      : undefined,
+
+    Mensualidad: Array.isArray(data.Mensualidad)
+      ? { multi_select: data.Mensualidad.map(item => ({ name: item })) }
+      : undefined,
+
+    Recursos: Array.isArray(data.Recursos)
+      ? { multi_select: data.Recursos.map(item => ({ name: item })) }
+      : undefined,
+
+    Productos_adquiridos: Array.isArray(data.Productos_adquiridos)
+      ? { multi_select: data.Productos_adquiridos.map(item => ({ name: item })) }
+      : undefined,
+
+    Sub_productos: Array.isArray(data.Sub_productos)
+      ? { multi_select: data.Sub_productos.map(item => ({ name: item })) }
+      : undefined,
+
+    Ultimo_contacto: data.Ultimo_contacto
+      ? { date: { start: data.Ultimo_contacto } }
       : undefined
   };
 }
-
-
 
 exports.createNotionContact = async (data) => {
   const properties = mapDataToNotionProperties(data);

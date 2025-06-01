@@ -1,47 +1,39 @@
 const mongoose = require('mongoose');
 
-const contactoSchema = new mongoose.Schema({
-  contact_id: { type: String, required: true, unique: true },
+const WebhookSchema = new mongoose.Schema({
+  full_name: String,
   first_name: String,
   last_name: String,
-  full_name: String,
-  email: String,
   phone: String,
+  email: String,
+  contact_id: String,
   tags: String,
-  country: String,
-  date_created: String,
-  full_address: String,
-  contact_type: String,
-
-  // UTM y tracking (pueden venir planos o anidados)
-  utm_content: String,
-  utm_source: String,
-  fbclid: String,
+  Temperatura: String,
+  Embudo_1: String,
+  Estrategia: [String],
+  Mensualidad: [String],
+  Recursos: [String],
+  Productos_adquiridos: [String],
+  Sub_productos: [String],
+  Ultimo_contacto: Date,
   utm_campaign: String,
+  utm_content: String,
+  utm_medium: String,
+  utm_source: String,
   utm_term: String,
-  utm_medium: String, // Para IG/Fb Ads también
-  // Puedes agregar más campos UTM si en el futuro surgen
-
-  location: {
-    name: String,
-    address: String,
-    city: String,
-    state: String,
-    country: String,
-    postalCode: String,
-    fullAddress: String,
-    id: String,
-  },
-
-  workflow: {
-    id: String,
-    name: String
-  },
-
-  contact: Object,      // <-- Guarda el objeto attributionSource entero si viene (para debugging/futuro)
-  triggerData: Object,
+  fbclid: String,
+  date_created: Date,
+  country: String,
+  contact_type: String,
+  full_address: String,
+  company_name: String,
+  location: Object,
+  workflow: Object,
+  contact: Object,
+  user: Object,
+  attributionSource: Object,
   customData: Object,
-  notion_id: String     // 👈 Al nivel raíz, no dentro de location
-});
+  triggerData: Object
+}, { strict: false }); // permite también guardar cualquier campo no definido
 
-module.exports = mongoose.model('Contacto', contactoSchema);
+module.exports = mongoose.model('CRMBDD', WebhookSchema, 'webhooks');
