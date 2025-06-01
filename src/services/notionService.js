@@ -6,8 +6,19 @@ const databaseId = process.env.NOTION_DATABASE_ID;
 
 function mapDataToNotionProperties(data) {
   return {
-    Nombre: data.full_name
+    // 🆕 Nombre completo como title
+    "Nombre completo": data.full_name
       ? { title: [{ text: { content: data.full_name } }] }
+      : undefined,
+
+    // 🆕 Nombre como rich_text
+    "Nombre": data.first_name
+      ? { rich_text: [{ text: { content: data.first_name } }] }
+      : undefined,
+
+    // 🆕 Apellido como rich_text
+    "Apellido": data.last_name
+      ? { rich_text: [{ text: { content: data.last_name } }] }
       : undefined,
 
     Telefono: data.phone
