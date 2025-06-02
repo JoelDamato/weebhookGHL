@@ -38,34 +38,57 @@ exports.handleWebhook = async (req, res) => {
     console.log('[MONGO] Resultado búsqueda en Mongo:', contacto);
 
     if (!contacto) {
-      // 🆕 Crear en Mongo y Notion
+      // 🆕 Crear el documento en memoria
       const nuevoContacto = new Contacto(contactoData);
-      await nuevoContacto.save();
-      console.log('[NOTION] Intentando crear en Notion...');
+
+      // Asignar el ID de Mongo al data para Notion
       contactoData._id = String(nuevoContacto._id);
 
-      // Crear en Notion y guardar el ID
+      console.log('[NOTION] Intentando crear en Notion...');
       const notionId = await createNotionContact(contactoData);
+
+      // Guardar el notion_id en el documento
       nuevoContacto.notion_id = notionId;
+
+      // Guardar el documento completo en Mongo
       await nuevoContacto.save();
       console.log('[NOTION] Creado en Notion con ID:', notionId);
 
-      return res.status(200).send({ message: 'Contacto nuevo creado en MongoDB y Notion', notion_id: notionId });
+      return res.status(200).send({
+        message: 'Contacto nuevo creado en MongoDB y Notion',
+        notion_id: notionId
+      });
+
     } else {
       // ♻️ Actualizar Mongo y Notion
       await Contacto.findOneAndUpdate({ contact_id }, { $set: contactoData });
 
-      // Si tiene notion_id, actualizar en Notion; si no, crear y guardar el ID
       let notionId = contacto.notion_id;
+
       if (notionId) {
+        // Ya tiene notion_id → actualizar
         await updateNotionContact(notionId, contactoData);
         console.log('♻️ Contacto actualizado en MongoDB y Notion');
-        return res.status(200).send({ message: 'Contacto actualizado en MongoDB y Notion', notion_id: notionId });
+        return res.status(200).send({
+          message: 'Contacto actualizado en MongoDB y Notion',
+          notion_id: notionId
+        });
+
       } else {
+        // No tenía notion_id → crearlo y guardarlo
+        contactoData._id = String(contacto._id); // importante
         notionId = await createNotionContact(contactoData);
-        await Contacto.findOneAndUpdate({ contact_id }, { $set: { notion_id: notionId } });
+
+        await Contacto.findOneAndUpdate(
+          { contact_id },
+          { $set: { notion_id: notionId } }
+        );
+
         console.log('✅ Contacto actualizado en Mongo y creado en Notion');
-        return res.status(200).send({ message: 'Contacto sincronizado con Notion', notion_id: notionId });
+        return res.status(200).send({
+          message: 'Contacto sincronizado con Notion',
+          notion_id: notionId
+        });
       }
     }
   } catch (error) {
