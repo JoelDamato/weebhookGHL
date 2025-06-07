@@ -68,7 +68,7 @@ exports.handleNotionWebhook = async (req, res) => {
     const utm_content = getRichText("utm_content");
     const fbclid = getRichText("fbclid");
 
-    // Personalizados (validados uno por uno)
+    // Personalizados (usando IDs reales)
     const embudo = getSelect("Embudo_1");
     const mensualidad = getMultiSelect("Mensualidad");
     const estrategia = getMultiSelect("Estrategia");
@@ -85,7 +85,7 @@ exports.handleNotionWebhook = async (req, res) => {
     const body = {
       email,
       phone: telefono,
-      firstName: nombre || nombreCompleto,
+      firstName: nombre || "",
       lastName: apellido || "",
       utmSource: utm_source,
       utmMedium: utm_medium,
@@ -94,17 +94,23 @@ exports.handleNotionWebhook = async (req, res) => {
       utmContent: utm_content,
       fbclid: fbclid,
       customField: [
-        { name: "Embudo 1", value: embudo },
-        { name: "Mensualidad", value: mensualidad },
-        { name: "Estrategia", value: estrategia },
-        { name: "Productos adquiridos", value: productos },
-        { name: "Sub productos", value: subProductos },
-        { name: "Recursos", value: recursos },
-        { name: "Temperatura", value: temperatura },
-      ],
+        { id: "LqNrc2iiYFgZB8UdW3L6", value: embudo },
+        { id: "NWI5HRjOu8aa8dD76kPS", value: mensualidad },
+        { id: "8iPPm28N2l5HV94UeK28", value: estrategia },
+        { id: "5OLqEbZYm5j95nLs0pcu", value: productos },
+        { id: "9OG7VeaubWZFTIQmZsWa", value: subProductos },
+        { id: "gc4F2H6uV9OezwglO6Uo", value: recursos },
+        { id: "vy2rHZreNVdHWjxALxic", value: temperatura },
+        { id: "cdJJCRzElVtnneHPPDhv", value: utm_term },
+        { id: "pZ2bIKcQKS8AdpVQS1jc", value: utm_medium },
+        { id: "LsczcupSHc2kT623s860", value: utm_campaign },
+        { id: "9NcibYaWSp5ciwevtuAw", value: fbclid },
+        { id: "hXPfmoL0QAeqYbSiNwNZ", value: utm_source },
+        { id: "gq73k4n4NPhXuWuXfOqU", value: utm_content }
+      ].filter((f) => f.value), // Filtra los vacíos
     };
 
-    console.log("📤 Payload preparado para GoHighLevel:");
+    console.log("📤 Payload final enviado a GHL:");
     console.dir(body, { depth: null });
 
     const response = await axios.put(
@@ -118,7 +124,8 @@ exports.handleNotionWebhook = async (req, res) => {
       }
     );
 
-    console.log("✅ Contacto actualizado en GoHighLevel:", response.data);
+    console.log("✅ Contacto actualizado en GoHighLevel:");
+    console.dir(response.data, { depth: null });
 
     return res.status(200).json({
       success: true,
