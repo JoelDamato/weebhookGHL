@@ -10,19 +10,47 @@ exports.handleNotionWebhook = async (req, res) => {
     const GHL_API_TOKEN = process.env.GOHIGHLEVEL_API_KEY;
 
     // Utils
-    const getRichText = (field) =>
-      properties?.[field]?.rich_text?.[0]?.plain_text || null;
+    const getRichText = (field) => {
+      const value = properties?.[field]?.rich_text?.[0]?.plain_text || null;
+      console.log(`🔍 ${field} (rich_text):`, value);
+      return value;
+    };
 
-    const getTitle = () =>
-      properties?.["Nombre completo"]?.title?.[0]?.plain_text || null;
+    const getTitle = () => {
+      const value = properties?.["Nombre completo"]?.title?.[0]?.plain_text || null;
+      console.log("🔍 Nombre completo (title):", value);
+      return value;
+    };
 
-    const getPhone = () => properties?.["Telefono"]?.phone_number || null;
-    const getEmail = () => properties?.["Mail"]?.email || null;
-    const getSelect = (field) => properties?.[field]?.select?.name || null;
-    const getMultiSelect = (field) =>
-      properties?.[field]?.multi_select?.map((item) => item.name).join(", ") || null;
-    const getGhlId = () =>
-      properties?.["ghl_id"]?.rich_text?.[0]?.plain_text || null;
+    const getPhone = () => {
+      const value = properties?.["Telefono"]?.phone_number || null;
+      console.log("🔍 Telefono:", value);
+      return value;
+    };
+
+    const getEmail = () => {
+      const value = properties?.["Mail"]?.email || null;
+      console.log("🔍 Mail:", value);
+      return value;
+    };
+
+    const getSelect = (field) => {
+      const value = properties?.[field]?.select?.name || null;
+      console.log(`🔍 ${field} (select):`, value);
+      return value;
+    };
+
+    const getMultiSelect = (field) => {
+      const value = properties?.[field]?.multi_select?.map((item) => item.name).join(", ") || null;
+      console.log(`🔍 ${field} (multi_select):`, value);
+      return value;
+    };
+
+    const getGhlId = () => {
+      const value = properties?.["ghl_id"]?.rich_text?.[0]?.plain_text || null;
+      console.log("🔍 GHL ID:", value);
+      return value;
+    };
 
     // Campos básicos
     const nombre = getRichText("Nombre");
@@ -40,8 +68,8 @@ exports.handleNotionWebhook = async (req, res) => {
     const utm_content = getRichText("utm_content");
     const fbclid = getRichText("fbclid");
 
-    // Personalizados (solo los confirmados como válidos)
-    const embudo = getSelect("Embudo_1"); // = "Embudo 1" en GHL
+    // Personalizados (validados uno por uno)
+    const embudo = getSelect("Embudo_1");
     const mensualidad = getMultiSelect("Mensualidad");
     const estrategia = getMultiSelect("Estrategia");
     const productos = getMultiSelect("Productos_adquiridos");
@@ -76,7 +104,7 @@ exports.handleNotionWebhook = async (req, res) => {
       ],
     };
 
-    console.log("📤 Payload enviado a GoHighLevel:");
+    console.log("📤 Payload preparado para GoHighLevel:");
     console.dir(body, { depth: null });
 
     const response = await axios.put(
