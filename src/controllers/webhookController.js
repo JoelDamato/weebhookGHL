@@ -25,8 +25,21 @@ function buildContactoData(body) {
 
 exports.handleWebhook = async (req, res) => {
   console.log('🟡 [DEBUG] Entró al handleWebhook de /webhook');
-  console.log('📩 Webhook recibido desde GHL:');
-  console.log(JSON.stringify(req.body, null, 2));
+console.log('📩 Webhook recibido desde GHL:');
+console.log(JSON.stringify(req.body, null, 2));
+
+// 👇 Agregado: Mostrar custom fields con sus IDs
+const customFields = req.body?.customField || req.body?.contact?.customField;
+
+if (customFields && typeof customFields === 'object') {
+  console.log('🧠 Custom Fields recibidos desde GHL:');
+  for (const [fieldId, value] of Object.entries(customFields)) {
+    console.log(`→ ${fieldId}: ${value}`);
+  }
+} else {
+  console.log('⚠️ No se encontraron campos personalizados en el webhook.');
+}
+
 
   const { contact_id } = req.body;
   try {
