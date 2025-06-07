@@ -119,3 +119,20 @@ exports.updateNotionContact = async (pageId, data) => {
   });
   console.log('♻️ Actualizado en Notion:', pageId);
 };
+
+exports.findNotionContactByGhlId = async (ghlId) => {
+  if (!ghlId) return null;
+  const response = await notion.databases.query({
+    database_id: databaseId,
+    filter: {
+      property: 'ghl_id',
+      rich_text: {
+        equals: ghlId
+      }
+    }
+  });
+  if (response.results && response.results.length > 0) {
+    return response.results[0].id;
+  }
+  return null;
+};
