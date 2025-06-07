@@ -95,6 +95,19 @@ exports.handleWebhook = async (req, res) => {
           notion_id: notionId
         });
       } catch (err) {
+        // Manejo específico para error de rate limit de Notion
+        if (
+          err?.response?.status === 429 ||
+          err?.status === 429 ||
+          err?.code === 'rate_limited'
+        ) {
+          // Esperar 2 segundos antes de responder
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          return res.status(429).send({
+            error: 'Rate limited by Notion API',
+            details: err?.response?.data || err?.message || err
+          });
+        }
         // Si falla el update, crear nuevo en Notion y actualizar notion_id en Mongo
         contactoData._id = String(contacto._id);
         const nuevoNotionId = await createNotionContact(contactoData);
