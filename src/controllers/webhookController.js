@@ -53,11 +53,11 @@ exports.handleWebhook = async (req, res) => {
       const nuevoContacto = new Contacto(contactoData);
       contactoData._id = String(nuevoContacto._id);
 
-      // Buscar en Notion por contact_id (GHL ID)
-      let notionId = await findNotionContactByGhlId(contactoData.contact_id);
+      // Buscar en Notion por notion_id (si existe en el nuevo contacto)
+      let notionId = nuevoContacto.notion_id;
 
       if (notionId) {
-        // Si existe en Notion, actualizarlo
+        // Si existe notion_id, actualizar en Notion usando ese ID
         await updateNotionContact(notionId, contactoData);
         nuevoContacto.notion_id = notionId;
         await nuevoContacto.save();
@@ -66,7 +66,7 @@ exports.handleWebhook = async (req, res) => {
           notion_id: notionId
         });
       } else {
-        // Si no existe en Notion, crearlo
+        // Si no existe notion_id, crearlo en Notion
         notionId = await createNotionContact(contactoData);
         nuevoContacto.notion_id = notionId;
         await nuevoContacto.save();
@@ -86,7 +86,7 @@ exports.handleWebhook = async (req, res) => {
 
     let notionId = contacto.notion_id;
 
-    // --- Nueva lógica de búsqueda en Notion ---
+    // --- Siempre buscar y actualizar en Notion usando notion_id de Mongo ---
     if (notionId) {
       try {
         await updateNotionContact(notionId, contactoData);
@@ -95,47 +95,7 @@ exports.handleWebhook = async (req, res) => {
           notion_id: notionId
         });
       } catch (err) {
-        // Si falla el update, intentar buscar por contact_id en Notion
-        notionId = await findNotionContactByGhlId(contactoData.contact_id);
-        if (notionId) {
-          await updateNotionContact(notionId, contactoData);
-          await Contacto.findOneAndUpdate(
-            { contact_id },
-            { $set: { notion_id: notionId } }
-          );
-          return res.status(200).send({
-            message: 'Contacto actualizado en Notion por contact_id',
-            notion_id: notionId
-          });
-        } else {
-          // Si tampoco existe, crear nuevo en Notion
-          contactoData._id = String(contacto._id);
-          const nuevoNotionId = await createNotionContact(contactoData);
-          await Contacto.findOneAndUpdate(
-            { contact_id },
-            { $set: { notion_id: nuevoNotionId } }
-          );
-          return res.status(200).send({
-            message: 'Se creó nuevo contacto en Notion porque el anterior falló',
-            notion_id: nuevoNotionId
-          });
-        }
-      }
-    } else {
-      // No tenía notion_id → buscar por contact_id en Notion
-      notionId = await findNotionContactByGhlId(contactoData.contact_id);
-      if (notionId) {
-        await updateNotionContact(notionId, contactoData);
-        await Contacto.findOneAndUpdate(
-          { contact_id },
-          { $set: { notion_id: notionId } }
-        );
-        return res.status(200).send({
-          message: 'Contacto sincronizado con Notion (encontrado por contact_id)',
-          notion_id: notionId
-        });
-      } else {
-        // Si no existe, crearlo
+        // Si falla el update, crear nuevo en Notion y actualizar notion_id en Mongo
         contactoData._id = String(contacto._id);
         const nuevoNotionId = await createNotionContact(contactoData);
         await Contacto.findOneAndUpdate(
@@ -143,10 +103,22 @@ exports.handleWebhook = async (req, res) => {
           { $set: { notion_id: nuevoNotionId } }
         );
         return res.status(200).send({
-          message: 'Contacto sincronizado con Notion',
+          message: 'Se creó nuevo contacto en Notion porque el anterior falló',
           notion_id: nuevoNotionId
         });
       }
+    } else {
+      // No tenía notion_id → crear nuevo en Notion
+      contactoData._id = String(contacto._id);
+      const nuevoNotionId = await createNotionContact(contactoData);
+      await Contacto.findOneAndUpdate(
+        { contact_id },
+        { $set: { notion_id: nuevoNotionId } }
+      );
+      return res.status(200).send({
+        message: 'Contacto sincronizado con Notion',
+        notion_id: nuevoNotionId
+      });
     }
 
   } catch (error) {
