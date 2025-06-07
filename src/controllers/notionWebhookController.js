@@ -2,6 +2,9 @@ const axios = require("axios");
 
 exports.handleNotionWebhook = async (req, res) => {
   try {
+    console.log("📥 Webhook recibido desde Notion:");
+    console.dir(req.body, { depth: null });
+
     const data = req.body?.data;
     const properties = data?.properties;
     const GHL_API_TOKEN = process.env.GOHIGHLEVEL_API_KEY;
@@ -47,6 +50,7 @@ exports.handleNotionWebhook = async (req, res) => {
     const temperatura = getSelect("Temperatura");
 
     if (!ghlId) {
+      console.warn("⚠️ No se recibió ghl_id, no se puede actualizar.");
       return res.status(400).json({ error: "Falta ghl_id para actualizar contacto." });
     }
 
@@ -72,6 +76,9 @@ exports.handleNotionWebhook = async (req, res) => {
       ],
     };
 
+    console.log("📤 Payload enviado a GoHighLevel:");
+    console.dir(body, { depth: null });
+
     const response = await axios.put(
       `https://rest.gohighlevel.com/v1/contacts/${ghlId}`,
       body,
@@ -92,7 +99,7 @@ exports.handleNotionWebhook = async (req, res) => {
       data: response.data,
     });
   } catch (error) {
-    console.error("❌ Error al actualizar en GHL:", error.message);
+    console.error("❌ Error al actualizar en GHL:", error.response?.data || error.message);
     return res.status(500).json({ error: "Fallo al actualizar contacto en GoHighLevel" });
   }
 };
