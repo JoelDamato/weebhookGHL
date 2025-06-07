@@ -1,118 +1,98 @@
-require('../db'); // conexión MongoDB
-const Contacto = require('../models/contacto');
-const { createNotionContact, updateNotionContact } = require('../services/notionService');
+const axios = require("axios");
 
-// Extrae UTM desde plano o anidado
-const getUtm = (data, key) => (
-  data[key] ||
-  data.contact?.attributionSource?.[key]
-);
-
-// Devuelve un objeto con los utm normalizados + el resto del body
-function buildContactoData(body) {
-  return {
-    ...body,
-    utm_content: getUtm(body, 'utm_content'),
-    utm_source: getUtm(body, 'utm_source'),
-    fbclid: getUtm(body, 'fbclid'),
-    utm_campaign: getUtm(body, 'utm_campaign'),
-    utm_term: getUtm(body, 'utm_term'),
-    utm_medium:
-      getUtm(body, 'utm_medium') ||
-      body.contact?.attributionSource?.medium,
-  };
-}
-
-exports.handleWebhook = async (req, res) => {
-  console.log('🟡 [DEBUG] Entró al handleWebhook de /webhook');
-  console.log('📩 Webhook recibido desde GHL:');
-  console.log(JSON.stringify(req.body, null, 2));
-
-  const { contact_id } = req.body;
+exports.handleNotionWebhook = async (req, res) => {
   try {
-    // 1. PREPROCESAR LOS UTM
-    const contactoData = buildContactoData(req.body);
+    const data = req.body?.data;
+    const properties = data?.properties;
+    const GHL_API_TOKEN = process.env.GOHIGHLEVEL_API_KEY;
 
-    // 2. Buscar en Mongo
-    let contacto = await Contacto.findOne({ contact_id });
-    console.log('[MONGO] Resultado búsqueda en Mongo:', contacto);
+    // Utils
+    const getRichText = (field) =>
+      properties?.[field]?.rich_text?.[0]?.plain_text || null;
 
-    if (!contacto) {
-      // 🆕 Crear el documento en memoria
-      const nuevoContacto = new Contacto(contactoData);
+    const getTitle = () =>
+      properties?.["Nombre completo"]?.title?.[0]?.plain_text || null;
 
-      // Asignar el ID de Mongo al data para Notion
-      contactoData._id = String(nuevoContacto._id);
+    const getPhone = () => properties?.["Telefono"]?.phone_number || null;
+    const getEmail = () => properties?.["Mail"]?.email || null;
+    const getSelect = (field) => properties?.[field]?.select?.name || null;
+    const getMultiSelect = (field) =>
+      properties?.[field]?.multi_select?.map((item) => item.name).join(", ") || null;
+    const getGhlId = () =>
+      properties?.["ghl_id"]?.rich_text?.[0]?.plain_text || null;
 
-      console.log('[NOTION] Intentando crear en Notion...');
-      const notionId = await createNotionContact(contactoData);
+    // Campos básicos
+    const nombre = getRichText("Nombre");
+    const apellido = getRichText("Apellido");
+    const nombreCompleto = getTitle();
+    const telefono = getPhone();
+    const email = getEmail();
+    const ghlId = getGhlId();
 
-      // Guardar el notion_id en el documento
-      nuevoContacto.notion_id = notionId;
+    // UTM + segmentación
+    const utm_source = getRichText("utm_source");
+    const utm_medium = getRichText("utm_medium");
+    const utm_campaign = getRichText("utm_campaign");
+    const utm_term = getRichText("utm_term");
+    const utm_content = getRichText("utm_content");
+    const fbclid = getRichText("fbclid");
 
-      // Guardar el documento completo en Mongo
-      await nuevoContacto.save();
-      console.log('[NOTION] Creado en Notion con ID:', notionId);
+    // Personalizados (selects y multi-selects)
+    const embudo = getSelect("Embudo_1");
+    const mensualidad = getMultiSelect("Mensualidad");
+    const estrategia = getMultiSelect("Estrategia");
+    const productos = getMultiSelect("Productos_adquiridos");
+    const subProductos = getMultiSelect("Sub_productos");
+    const recursos = getMultiSelect("Recursos");
+    const temperatura = getSelect("Temperatura");
 
-      return res.status(200).send({
-        message: 'Contacto nuevo creado en MongoDB y Notion',
-        notion_id: notionId
-      });
-
-    } else {
-      // ♻️ Actualizar Mongo y Notion
-      await Contacto.findOneAndUpdate({ contact_id }, { $set: contactoData });
-
-      let notionId = contacto.notion_id;
-
-            if (notionId) {
-            try {
-              // Intentar actualizar
-              await updateNotionContact(notionId, contactoData);
-              console.log('♻️ Contacto actualizado en MongoDB y Notion');
-              return res.status(200).send({
-                message: 'Contacto actualizado en MongoDB y Notion',
-                notion_id: notionId
-              });
-            } catch (err) {
-              console.warn('⚠️ No se pudo actualizar Notion (puede estar archivado o borrado). Creando nuevo...');
-
-              // Generar nuevo contacto en Notion
-              contactoData._id = String(contacto._id);
-              const nuevoNotionId = await createNotionContact(contactoData);
-
-              // Actualizar el notion_id en Mongo
-              await Contacto.findOneAndUpdate(
-                { contact_id },
-                { $set: { notion_id: nuevoNotionId } }
-              );
-
-              return res.status(200).send({
-                message: 'Se creó nuevo contacto en Notion porque el anterior falló',
-                notion_id: nuevoNotionId
-              });
-            }
-
-
-      } else {
-        // No tenía notion_id → crearlo y guardarlo
-        contactoData._id = String(contacto._id); // importante
-        notionId = await createNotionContact(contactoData);
-
-        await Contacto.findOneAndUpdate(
-          { contact_id },
-          { $set: { notion_id: notionId } }
-        );
-
-        console.log('✅ Contacto actualizado en Mongo y creado en Notion');
-        return res.status(200).send({
-          message: 'Contacto sincronizado con Notion',
-          notion_id: notionId
-        });
-      }
+    if (!ghlId) {
+      return res.status(400).json({ error: "Falta ghl_id para actualizar contacto." });
     }
+
+    const body = {
+      email,
+      phone: telefono,
+      firstName: nombre || nombreCompleto,
+      lastName: apellido || "",
+      utmSource: utm_source,
+      utmMedium: utm_medium,
+      utmCampaign: utm_campaign,
+      utmTerm: utm_term,
+      utmContent: utm_content,
+      fbclid: fbclid,
+      customField: [
+        { name: "Embudo_1", value: embudo },
+        { name: "Mensualidad", value: mensualidad },
+        { name: "Estrategia", value: estrategia },
+        { name: "Productos_adquiridos", value: productos },
+        { name: "Sub_productos", value: subProductos },
+        { name: "Recursos", value: recursos },
+        { name: "Temperatura", value: temperatura },
+      ],
+    };
+
+    const response = await axios.put(
+      `https://rest.gohighlevel.com/v1/contacts/${ghlId}`,
+      body,
+      {
+        headers: {
+          Authorization: `Bearer ${GHL_API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("✅ Contacto actualizado en GoHighLevel:", response.data);
+
+    return res.status(200).json({
+      success: true,
+      updated: true,
+      ghl_id: ghlId,
+      data: response.data,
+    });
   } catch (error) {
-    console.error('❌ Error al procesar el webhook:', error);
-    res.status(500).send({ error: 'Error interno del servidor' });
+    console.error("❌ Error al actualizar en GHL:", error.message);
+    return res.status(500).json({ error: "Fallo al actualizar contacto en GoHighLevel" });
   }
 };
