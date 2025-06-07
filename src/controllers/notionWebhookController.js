@@ -54,27 +54,26 @@ exports.handleNotionWebhook = async (req, res) => {
       return res.status(400).json({ error: "Falta ghl_id para actualizar contacto." });
     }
 
-    const body = {
-      email,
-      phone: telefono,
-      firstName: nombre || nombreCompleto,
-      lastName: apellido || "",
-      utmSource: utm_source,
-      utmMedium: utm_medium,
-      utmCampaign: utm_campaign,
-      utmTerm: utm_term,
-      utmContent: utm_content,
-      fbclid: fbclid,
-      customField: [
-        { name: "Embudo_1", value: embudo },
-        { name: "Mensualidad", value: mensualidad },
-        { name: "Estrategia", value: estrategia },
-        { name: "Productos_adquiridos", value: productos },
-        { name: "Sub_productos", value: subProductos },
-        { name: "Recursos", value: recursos },
-        { name: "Temperatura", value: temperatura },
-      ],
-    };
+const body = {
+  email,
+  phone: telefono,
+  firstName: nombre || nombreCompleto,
+  lastName: apellido || "",
+  utmSource: utm_source,
+  utmMedium: utm_medium,
+  utmCampaign: utm_campaign,
+  utmTerm: utm_term,
+  utmContent: utm_content,
+  fbclid: fbclid,
+  Embudo_1: embudo,
+  Mensualidad: mensualidad,
+  Estrategia: estrategia,
+  Productos_adquiridos: productos,
+  Sub_productos: subProductos,
+  Recursos: recursos,
+  Temperatura: temperatura,
+};
+
 
     console.log("📤 Payload enviado a GoHighLevel:");
     console.dir(body, { depth: null });
