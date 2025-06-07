@@ -40,8 +40,8 @@ exports.handleNotionWebhook = async (req, res) => {
     const utm_content = getRichText("utm_content");
     const fbclid = getRichText("fbclid");
 
-    // Personalizados (selects y multi-selects)
-    const embudo = getSelect("Embudo_1");
+    // Personalizados (solo los confirmados como válidos)
+    const embudo = getSelect("Embudo_1"); // = "Embudo 1" en GHL
     const mensualidad = getMultiSelect("Mensualidad");
     const estrategia = getMultiSelect("Estrategia");
     const productos = getMultiSelect("Productos_adquiridos");
@@ -54,26 +54,27 @@ exports.handleNotionWebhook = async (req, res) => {
       return res.status(400).json({ error: "Falta ghl_id para actualizar contacto." });
     }
 
-const body = {
-  email,
-  phone: telefono,
-  firstName: nombre || nombreCompleto,
-  lastName: apellido || "",
-  utmSource: utm_source,
-  utmMedium: utm_medium,
-  utmCampaign: utm_campaign,
-  utmTerm: utm_term,
-  utmContent: utm_content,
-  fbclid: fbclid,
-  Embudo_1: embudo,
-  Mensualidad: mensualidad,
-  Estrategia: estrategia,
-  Productos_adquiridos: productos,
-  Sub_productos: subProductos,
-  Recursos: recursos,
-  Temperatura: temperatura,
-};
-
+    const body = {
+      email,
+      phone: telefono,
+      firstName: nombre || nombreCompleto,
+      lastName: apellido || "",
+      utmSource: utm_source,
+      utmMedium: utm_medium,
+      utmCampaign: utm_campaign,
+      utmTerm: utm_term,
+      utmContent: utm_content,
+      fbclid: fbclid,
+      customField: [
+        { name: "Embudo 1", value: embudo },
+        { name: "Mensualidad", value: mensualidad },
+        { name: "Estrategia", value: estrategia },
+        { name: "Productos adquiridos", value: productos },
+        { name: "Sub productos", value: subProductos },
+        { name: "Recursos", value: recursos },
+        { name: "Temperatura", value: temperatura },
+      ],
+    };
 
     console.log("📤 Payload enviado a GoHighLevel:");
     console.dir(body, { depth: null });
