@@ -6,14 +6,14 @@ const path = require('path');
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 const databaseId = process.env.NOTION_DATABASE_ID;
 
-async function encontrarDuplicadosPorGhlId() {
+async function exportarDuplicadosPorTelefono() {
   let hasMore = true;
   let startCursor = undefined;
-  const ghlIdMap = {};
+  const phoneMap = {};
   let total = 0;
   let pageCount = 0;
 
-  // Recorre toda la base de datos de Notion, página por página
+  // 1. Recorre toda la base de datos y agrupa por teléfono
   while (hasMore) {
     console.log(`Consultando página de Notion... (page ${pageCount + 1})`);
     const response = await notion.databases.query({
@@ -23,12 +23,11 @@ async function encontrarDuplicadosPorGhlId() {
     });
 
     for (const page of response.results) {
-      // El campo ghl_id está en la propiedad contact_id como rich_text
       const props = page.properties;
-      const ghlId = props?.contact_id?.rich_text?.[0]?.plain_text;
-      if (ghlId) {
-        if (!ghlIdMap[ghlId]) ghlIdMap[ghlId] = [];
-        ghlIdMap[ghlId].push(page.id);
+      const telefono = props?.Telefono?.phone_number;
+      if (telefono) {
+        if (!phoneMap[telefono]) phoneMap[telefono] = [];
+        phoneMap[telefono].push(page.id);
       }
       total++;
     }
@@ -39,27 +38,20 @@ async function encontrarDuplicadosPorGhlId() {
     console.log(`Procesadas ${total} filas hasta ahora...`);
   }
 
-  const duplicados = Object.entries(ghlIdMap).filter(([_, ids]) => ids.length > 1);
+  // 2. Detecta duplicados y exporta a CSV
+  const duplicados = Object.entries(phoneMap).filter(([_, ids]) => ids.length > 1);
+  console.log(`\n🔎 Se encontraron ${duplicados.length} teléfonos duplicados en la base de datos de Notion.\n`);
 
-  if (duplicados.length === 0) {
-    console.log('✅ No hay contactos duplicados por ghl_id en Notion.');
-    return;
-  }
-
-  console.log(`❗ Encontrados ${duplicados.length} ghl_id duplicados en Notion:\n`);
-  const csvLines = ['ghl_id,page_ids'];
-  duplicados.forEach(([ghlId, ids]) => {
-    console.log(`ghl_id: ${ghlId} (${ids.length} veces)`);
-    ids.forEach(id => console.log('  → pageId:', id));
-    csvLines.push(`"${ghlId}","${ids.join(';')}"`);
-    console.log('---');
+  const csvLines = ['telefono,page_ids'];
+  duplicados.forEach(([telefono, ids]) => {
+    csvLines.push(`"${telefono}","${ids.join(';')}"`);
   });
 
-  const csvPath = path.join(__dirname, 'duplicados_notion.csv');
+  const csvPath = path.join(__dirname, 'duplicados_telefono_notion.csv');
   fs.writeFileSync(csvPath, csvLines.join('\n'), 'utf8');
-  console.log(`\nArchivo CSV generado: ${csvPath}`);
+  console.log(`\nCSV generado: ${csvPath}`);
 }
 
-encontrarDuplicadosPorGhlId().catch(err => {
+exportarDuplicadosPorTelefono().catch(err => {
   console.error('❌ Error consultando Notion:', err.message);
 });

@@ -19,7 +19,7 @@ function buildContactoData(body) {
 }
 
 exports.handleWebhook = async (req, res) => {
-  console.log('🟡 Webhook recibido');
+  console.log('🟡 Webhook recibido de GHL');
   console.log(JSON.stringify(req.body, null, 2));
 
   const { contact_id } = req.body;
@@ -43,7 +43,18 @@ exports.handleWebhook = async (req, res) => {
         await nuevoContacto.save();
 
         // Actualizar Notion por si llegaron nuevos datos
-        await updateNotionContact(notionId, contactoData);
+        try {
+          await updateNotionContact(notionId, contactoData);
+        } catch (err) {
+          if (err?.code === 'rate_limited' || err?.status === 429) {
+            const retryAfter = Number(err.headers?.get('retry-after')) || 10;
+            console.warn(`⏳ Rate limited. Esperando ${retryAfter} segundos antes de reintentar...`);
+            await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+            await updateNotionContact(notionId, contactoData);
+          } else {
+            throw err;
+          }
+        }
 
         return res.status(200).send({
           message: 'Contacto vinculado a Notion existente y guardado en Mongo',
@@ -71,7 +82,18 @@ exports.handleWebhook = async (req, res) => {
     );
 
     if (contacto.notion_id) {
-      await updateNotionContact(contacto.notion_id, contactoData);
+      try {
+        await updateNotionContact(contacto.notion_id, contactoData);
+      } catch (err) {
+        if (err?.code === 'rate_limited' || err?.status === 429) {
+          const retryAfter = Number(err.headers?.get('retry-after')) || 10;
+          console.warn(`⏳ Rate limited. Esperando ${retryAfter} segundos antes de reintentar...`);
+          await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+          await updateNotionContact(contacto.notion_id, contactoData);
+        } else {
+          throw err;
+        }
+      }
       return res.status(200).send({
         message: 'Contacto actualizado en MongoDB y Notion',
         notion_id: contacto.notion_id
@@ -96,7 +118,21 @@ exports.handleWebhook = async (req, res) => {
     });
 
   } catch (error) {
+    if (error?.code === 'rate_limited' || error?.status === 429) {
+      const retryAfter = Number(error.headers?.get('retry-after')) || 10;
+      console.warn(`⏳ Rate limited. Esperando ${retryAfter} segundos antes de reintentar...`);
+      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+      return exports.handleWebhook(req, res); // reintenta el webhook completo
+    }
     console.error('❌ Error procesando webhook:', error);
     return res.status(500).send({ error: 'Error interno del servidor' });
   }
 };
+
+// El funcionamiento de guardado y duplicado sigue igual:
+// - Si el contacto NO existe en Mongo, busca en Notion por GHL ID.
+//   - Si existe en Notion, lo asocia en Mongo y actualiza Notion (no duplica en Notion).
+//   - Si NO existe en Notion, lo crea en Notion y guarda el notion_id en Mongo.
+// - Si el contacto SÍ existe en Mongo, actualiza Mongo y Notion.
+// - Si hay rate limit, reintenta la operación.
+// - Así, NO se crean duplicados en Notion por GHL ID y Mongo siempre queda sincronizado.
