@@ -94,20 +94,20 @@ exports.handleNotionWebhook = async (req, res) => {
       utmContent: utm_content,
       fbclid: fbclid,
       customField: [
-        { id: "LqNrc2iiYFgZB8UdW3L6", value: embudo },
-        { id: "NWI5HRjOu8aa8dD76kPS", value: mensualidad },
-        { id: "8iPPm28N2l5HV94UeK28", value: estrategia },
-        { id: "5OLqEbZYm5j95nLs0pcu", value: productos },
-        { id: "9OG7VeaubWZFTIQmZsWa", value: subProductos },
-        { id: "gc4F2H6uV9OezwglO6Uo", value: recursos },
-        { id: "vy2rHZreNVdHWjxALxic", value: temperatura },
+        { id: "LqNrc2iiYFgZB8UdW3L6", value: embudo || "" },
+        { id: "NWI5HRjOu8aa8dD76kPS", value: mensualidad || "" },
+        { id: "8iPPm28N2l5HV94UeK28", value: estrategia || "" },
+        { id: "5OLqEbZYm5j95nLs0pcu", value: productos || "" },
+        { id: "9OG7VeaubWZFTIQmZsWa", value: subProductos || "" },
+        { id: "gc4F2H6uV9OezwglO6Uo", value: recursos || "" },
+        { id: "vy2rHZreNVdHWjxALxic", value: temperatura || "" },
         { id: "cdJJCRzElVtnneHPPDhv", value: utm_term },
         { id: "pZ2bIKcQKS8AdpVQS1jc", value: utm_medium },
         { id: "LsczcupSHc2kT623s860", value: utm_campaign },
-        { id: "9NcibYaWSp5ciwevtuAw", value: fbclid },
+        { id: "9NcibYaWSp5ciwevtuAw", value: fbclid || "" },
         { id: "hXPfmoL0QAeqYbSiNwNZ", value: utm_source },
         { id: "gq73k4n4NPhXuWuXfOqU", value: utm_content }
-      ].filter((f) => f.value), // Filtra los vacíos
+      ] // No filtrar, así se envían los vacíos
     };
 
     console.log("📤 Payload final enviado a GHL:");
