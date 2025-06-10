@@ -1,6 +1,46 @@
 const axios = require("axios");
 
-exports.handleNotionWebhook = async (req, res) => {
+// Helper para reintentos con delay
+async function retryRequest(fn, maxRetries = 5, delayMs = 2000) {
+  let lastError;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (err.response && err.response.status === 429) {
+        console.warn(`⏳ Rate limit alcanzado. Reintentando en ${delayMs}ms... (${i + 1}/${maxRetries})`);
+        await new Promise(res => setTimeout(res, delayMs));
+        lastError = err;
+      } else {
+        throw err;
+      }
+    }
+  }
+  throw lastError;
+}
+
+// --- Cola simple para procesar webhooks uno por uno ---
+const queue = [];
+let processing = false;
+const DELAY_BETWEEN_REQUESTS = 1500; // ms (ajusta según tu necesidad)
+
+async function processQueue() {
+  if (processing) return;
+  processing = true;
+  while (queue.length > 0) {
+    const { req, res, next } = queue.shift();
+    try {
+      await handleNotionWebhookInternal(req, res, next);
+    } catch (e) {
+      // Ya maneja el error internamente
+    }
+    await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_REQUESTS));
+  }
+  processing = false;
+}
+
+// --- Tu handler original, renombrado ---
+async function handleNotionWebhookInternal(req, res, next) {
   try {
     console.log("📥 Webhook recibido desde Notion:");
     console.dir(req.body, { depth: null });
@@ -113,15 +153,18 @@ exports.handleNotionWebhook = async (req, res) => {
     console.log("📤 Payload final enviado a GHL:");
     console.dir(body, { depth: null });
 
-    const response = await axios.put(
-      `https://rest.gohighlevel.com/v1/contacts/${ghlId}`,
-      body,
-      {
-        headers: {
-          Authorization: `Bearer ${GHL_API_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      }
+    // Usa retryRequest para manejar el rate limit
+    const response = await retryRequest(() =>
+      axios.put(
+        `https://rest.gohighlevel.com/v1/contacts/${ghlId}`,
+        body,
+        {
+          headers: {
+            Authorization: `Bearer ${GHL_API_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
     );
 
     console.log("✅ Contacto actualizado en GoHighLevel:");
@@ -137,4 +180,10 @@ exports.handleNotionWebhook = async (req, res) => {
     console.error("❌ Error al actualizar en GHL:", error.response?.data || error.message);
     return res.status(500).json({ error: "Fallo al actualizar contacto en GoHighLevel" });
   }
+}
+
+// --- Nuevo handler que encola las peticiones ---
+exports.handleNotionWebhook = (req, res, next) => {
+  queue.push({ req, res, next });
+  processQueue();
 };
