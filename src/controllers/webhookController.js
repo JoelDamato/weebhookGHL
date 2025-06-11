@@ -18,12 +18,33 @@ function buildContactoData(body) {
   };
 }
 
-exports.handleWebhook = async (req, res) => {
-  console.log('🟡 Webhook recibido de GHL');
-  console.log(JSON.stringify(req.body, null, 2));
+// --- Cola simple para procesar webhooks uno por uno ---
+const queue = [];
+let processing = false;
+const DELAY_BETWEEN_REQUESTS = 1000; // ms, ajusta según tu necesidad
 
-  const { contact_id } = req.body;
-  const contactoData = buildContactoData(req.body);
+async function processQueue() {
+  if (processing) return;
+  processing = true;
+  while (queue.length > 0) {
+    const { reqBody } = queue.shift();
+    try {
+      await handleWebhookInternal(reqBody);
+    } catch (e) {
+      // El error ya se loguea internamente
+    }
+    await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_REQUESTS));
+  }
+  processing = false;
+}
+
+// --- Handler real, sin res ---
+async function handleWebhookInternal(body) {
+  console.log('🟡 Webhook recibido de GHL');
+  console.log(JSON.stringify(body, null, 2));
+
+  const { contact_id } = body;
+  const contactoData = buildContactoData(body);
 
   try {
     let contacto = await Contacto.findOne({ contact_id });
@@ -56,10 +77,7 @@ exports.handleWebhook = async (req, res) => {
           }
         }
 
-        return res.status(200).send({
-          message: 'Contacto vinculado a Notion existente y guardado en Mongo',
-          notion_id: notionId
-        });
+        return;
       }
 
       // Si no existe en Notion → crearlo
@@ -68,10 +86,7 @@ exports.handleWebhook = async (req, res) => {
       nuevoContacto.notion_id = notionId;
       await nuevoContacto.save();
 
-      return res.status(200).send({
-        message: 'Contacto nuevo creado en MongoDB y Notion',
-        notion_id: notionId
-      });
+      return;
     }
 
     // Contacto ya existe en Mongo
@@ -94,10 +109,7 @@ exports.handleWebhook = async (req, res) => {
           throw err;
         }
       }
-      return res.status(200).send({
-        message: 'Contacto actualizado en MongoDB y Notion',
-        notion_id: contacto.notion_id
-      });
+      return;
     }
 
     // Tenía Mongo pero no tenía Notion
@@ -112,10 +124,7 @@ exports.handleWebhook = async (req, res) => {
       { $set: { notion_id: nuevoNotionId } }
     );
 
-    return res.status(200).send({
-      message: 'Contacto sincronizado con nuevo registro en Notion',
-      notion_id: nuevoNotionId
-    });
+    return;
 
   } catch (error) {
     if (error?.code === 'rate_limited' || error?.status === 429) {
@@ -127,6 +136,13 @@ exports.handleWebhook = async (req, res) => {
     console.error('❌ Error procesando webhook:', error);
     return res.status(500).send({ error: 'Error interno del servidor' });
   }
+}
+
+// --- Nuevo handler que responde rápido y encola ---
+exports.handleWebhook = (req, res) => {
+  queue.push({ reqBody: req.body });
+  processQueue();
+  res.status(200).send({ received: true });
 };
 
 // El funcionamiento de guardado y duplicado sigue igual:
