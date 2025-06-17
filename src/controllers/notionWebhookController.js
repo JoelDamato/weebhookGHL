@@ -76,6 +76,8 @@ exports.handleNotionWebhook = async (req, res) => {
     const subProductos = getMultiSelect("Sub_productos");
     const recursos = getMultiSelect("Recursos");
     const temperatura = getSelect("Temperatura");
+    // Nuevo campo Estado ultimo comprobante
+    const estadoUltimoComprobante = getSelect("Estado ultimo comprobante");
 
     if (!ghlId) {
       console.warn("⚠️ No se recibió ghl_id, no se puede actualizar.");
@@ -106,7 +108,8 @@ exports.handleNotionWebhook = async (req, res) => {
         { id: "LsczcupSHc2kT623s860", value: utm_campaign },
         { id: "9NcibYaWSp5ciwevtuAw", value: fbclid },
         { id: "hXPfmoL0QAeqYbSiNwNZ", value: utm_source },
-        { id: "gq73k4n4NPhXuWuXfOqU", value: utm_content }
+        { id: "gq73k4n4NPhXuWuXfOqU", value: utm_content },
+        { id: "r80EDqrSrlaBt82Csf7k", value: estadoUltimoComprobante }
       ].filter((f) => f.value), // Filtra los vacíos
     };
 
