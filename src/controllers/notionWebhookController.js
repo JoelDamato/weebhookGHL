@@ -78,6 +78,8 @@ exports.handleNotionWebhook = async (req, res) => {
     const temperatura = getSelect("Temperatura");
     // Nuevo campo Estado ultimo comprobante
     const estadoUltimoComprobante = getSelect("Estado ultimo comprobante");
+    // Nuevo campo: País (texto simple)
+    const pais = getRichText("Pais");
 
     if (!ghlId) {
       console.warn("⚠️ No se recibió ghl_id, no se puede actualizar.");
@@ -109,7 +111,8 @@ exports.handleNotionWebhook = async (req, res) => {
         { id: "9NcibYaWSp5ciwevtuAw", value: fbclid },
         { id: "hXPfmoL0QAeqYbSiNwNZ", value: utm_source },
         { id: "gq73k4n4NPhXuWuXfOqU", value: utm_content },
-        { id: "r80EDqrSrlaBt82Csf7k", value: estadoUltimoComprobante }
+        { id: "r80EDqrSrlaBt82Csf7k", value: estadoUltimoComprobante },
+        { id: "zesJzuiFA438RMQvCGiE", value: pais } // <-- País
       ].filter((f) => f.value), // Filtra los vacíos
     };
 

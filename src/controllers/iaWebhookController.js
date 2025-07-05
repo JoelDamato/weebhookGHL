@@ -1,7 +1,10 @@
 const path = require('path');
-const { createCanvas, loadImage } = require('canvas');
+const { createCanvas, loadImage, registerFont } = require('canvas');
 const axios = require('axios');
 
+registerFont(path.join(__dirname, 'fonts', 'BrittanySignature.ttf'), {
+  family: 'Brittany Signature'
+});
 exports.handleIaWebhook = async (req, res) => {
   console.log('🚀 Generando diploma con Arial...');
   
