@@ -5,6 +5,7 @@ const axios = require('axios');
 registerFont(path.join(__dirname, 'fonts', 'BrittanySignature.ttf'), {
   family: 'Brittany Signature'
 });
+
 exports.handleIaWebhook = async (req, res) => {
   console.log('🚀 Generando diploma con Arial...');
   
