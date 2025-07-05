@@ -79,7 +79,7 @@ exports.handleNotionWebhook = async (req, res) => {
     // Nuevo campo Estado ultimo comprobante
     const estadoUltimoComprobante = getSelect("Estado ultimo comprobante");
     // Nuevo campo: País (texto simple)
-    const pais = getRichText("Pais");
+    const pais = getRichText("Pais") || properties?.["Pais tel 2"]?.formula?.string || null;
 
     if (!ghlId) {
       console.warn("⚠️ No se recibió ghl_id, no se puede actualizar.");
