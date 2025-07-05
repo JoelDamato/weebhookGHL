@@ -6,6 +6,9 @@ const bodyParser = require('body-parser');
 const webhookController = require('./controllers/webhookController');
 const notionWebhookController = require('./controllers/notionWebhookController.js');
 const iaWebhookController = require('./controllers/iaWebhookController');
+const iaWebhookDevolucionController = require('./controllers/iaWebhookDevolucionController');
+const iaWebhookAlejoController = require('./controllers/iaWebhookAlejoController');
+const iaWebhookFinalController = require('./controllers/iaWebhookFinalController');
 const path = require('path');
 
 const app = express();
@@ -16,6 +19,9 @@ app.use(bodyParser.json());
 app.post('/webhook', webhookController.handleWebhook);
 app.post('/webhook/notion', notionWebhookController.handleNotionWebhook);
 app.post('/webhook/ia/jota', iaWebhookController.handleIaWebhook);
+app.post('/webhook/ia/erick', iaWebhookDevolucionController.handleIaWebhookDevolucion);
+app.post('/webhook/ia/alejo', iaWebhookAlejoController.handleIaWebhookAlejo);
+app.post('/webhook/ia/final', iaWebhookFinalController.handleIaWebhookFinal);
 
 // Servir archivos estáticos desde /public
 app.use('/public', require('express').static(path.join(__dirname, '..', 'public')));

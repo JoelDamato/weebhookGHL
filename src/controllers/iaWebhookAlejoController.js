@@ -1,16 +1,15 @@
-const path = require('path');
 const { createCanvas, loadImage } = require('canvas');
 const axios = require('axios');
 
-exports.handleIaWebhook = async (req, res) => {
-  console.log('🚀 Generando diploma con Arial...');
+exports.handleIaWebhookAlejo = async (req, res) => {
+  console.log('🚀 Generando diploma para Alejo...');
   
   try {
-    const nombre = req.body.nombre || 'Nombre de Prueba';
-    const ghl_id = req.body.ghl_id || 'ID123';
-    const imageUrl = 'https://i.ibb.co/c5zTvqw/Diploma-Mf-3-0.png';
+    const devolucion_alejo = req.body.devolucion_alejo || 'Alejo';
+    const devolucion_teorica = req.body.devolucion_teorica || 'Teórica';
+    const imageUrl = 'https://i.ibb.co/DHNgFvgg/Devolucio-n1-1.png';
 
-    console.log('📝 Datos:', { nombre, ghl_id });
+    console.log('📝 Datos:', { devolucion_alejo, devolucion_teorica });
 
     // Descargar imagen
     const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
@@ -26,32 +25,28 @@ exports.handleIaWebhook = async (req, res) => {
     // Dibujar imagen base
     ctx.drawImage(img, 0, 0);
 
-    // ===== NOMBRE =====
-    ctx.fillStyle = 'red';
-    ctx.font = 'bold 64px Arial';
+    // ===== DEVOLUCION ALEJO =====
+    ctx.fillStyle = 'white';
+    ctx.font = '80px "Brittany Signature"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
     const centerX = img.width / 2;
-    const centerY = img.height / 2;
+    const alejoY = img.height / 2 - 140;
     
-    console.log(`📍 Nombre en: (${centerX}, ${centerY})`);
+    ctx.fillText(devolucion_alejo, centerX, alejoY);
+
+    // ===== DEVOLUCION TEORICA =====
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 32px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     
-    ctx.fillText(nombre, centerX, centerY);
+    const teoricaX = img.width / 2 + 100;
+    const teoricaY = (img.height * 3) / 4 + 92;
     
-    // ===== ID =====
-    ctx.fillStyle = 'red';
-    ctx.font = 'bold 24px Arial';
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'bottom';
-    
-    const idX = img.width - 20;
-    const idY = img.height - 20;
-    
-    console.log(`🏷️ ID en: (${idX}, ${idY})`);
-    
-    ctx.fillText(`ID: ${ghl_id}`, idX, idY);
-    
+    ctx.fillText(`MF3: ${devolucion_teorica}`, teoricaX, teoricaY);
+
     console.log('✅ Completado');
 
     // Enviar respuesta
