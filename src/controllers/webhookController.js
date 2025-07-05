@@ -66,6 +66,11 @@ async function handleWebhookInternal(body) {
         // Actualizar Notion por si llegaron nuevos datos
         try {
           await updateNotionContact(notionId, contactoData);
+
+          // Actualizar campo "Pais" en Notion si viene en el body
+          if (body.pais) {
+            await updateNotionContact(notionId, { Pais: body.pais });
+          }
         } catch (err) {
           if (err?.code === 'rate_limited' || err?.status === 429) {
             const retryAfter = Number(err.headers?.get('retry-after')) || 10;
@@ -99,6 +104,11 @@ async function handleWebhookInternal(body) {
     if (contacto.notion_id) {
       try {
         await updateNotionContact(contacto.notion_id, contactoData);
+
+        // Actualizar campo "Pais" en Notion si viene en el body
+        if (body.pais) {
+          await updateNotionContact(contacto.notion_id, { Pais: body.pais });
+        }
       } catch (err) {
         if (err?.code === 'rate_limited' || err?.status === 429) {
           const retryAfter = Number(err.headers?.get('retry-after')) || 10;
