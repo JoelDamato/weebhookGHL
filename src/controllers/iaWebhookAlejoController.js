@@ -1,29 +1,39 @@
 const { createCanvas, loadImage } = require('canvas');
 const axios = require('axios');
 
-// Función para dividir texto en líneas
-function wrapText(ctx, text, maxWidth) {
-  const words = text.split(' ');
+// Función mejorada para ajustar texto y respetar saltos de línea
+function wrapTextMultiline(ctx, text, maxWidth) {
+  const paragraphs = text.split('\n'); // dividir en párrafos por salto de línea
   const lines = [];
-  let currentLine = words[0];
 
-  for (let i = 1; i < words.length; i++) {
-    const word = words[i];
-    const width = ctx.measureText(currentLine + ' ' + word).width;
-    if (width < maxWidth) {
-      currentLine += ' ' + word;
-    } else {
-      lines.push(currentLine);
-      currentLine = word;
+  for (let p = 0; p < paragraphs.length; p++) {
+    const words = paragraphs[p].split(' ');
+    let currentLine = words[0] || '';
+
+    for (let i = 1; i < words.length; i++) {
+      const word = words[i];
+      const width = ctx.measureText(currentLine + ' ' + word).width;
+
+      if (width < maxWidth) {
+        currentLine += ' ' + word;
+      } else {
+        lines.push(currentLine);
+        currentLine = word;
+      }
+    }
+
+    lines.push(currentLine);
+    if (p < paragraphs.length - 1) {
+      lines.push(''); // línea vacía entre párrafos
     }
   }
-  lines.push(currentLine);
+
   return lines;
 }
 
 exports.handleIaWebhookAlejo = async (req, res) => {
   console.log('🚀 Generando diploma para Alejo...');
-  
+
   try {
     const devolucion_alejo = req.body.devolucion_alejo || 'Alejo';
     const devolucion_teorica = req.body.devolucion_teorica || 'Teórica';
@@ -31,63 +41,50 @@ exports.handleIaWebhookAlejo = async (req, res) => {
 
     console.log('📝 Datos:', { devolucion_alejo, devolucion_teorica });
 
-    // Descargar imagen
+    // Descargar imagen base
     const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
     const buffer = Buffer.from(response.data, 'binary');
-    
-    // Crear canvas
+
     const img = await loadImage(buffer);
     const canvas = createCanvas(img.width, img.height);
     const ctx = canvas.getContext('2d');
-    
+
     console.log(`📐 Dimensiones: ${img.width}x${img.height}`);
 
     // Dibujar imagen base
     ctx.drawImage(img, 0, 0);
 
-    // ===== DEVOLUCION ALEJO (debajo del título "Devolución Erick Gómez:") =====
+    // ===== Estilos de texto =====
     ctx.fillStyle = 'white';
     ctx.font = '18px Arial';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
-    
-    // Posición para el contenido de la devolución (área blanca grande)
-    const alejoX = img.width * 0.10; // 8% del ancho desde la izquierda
-    const alejoY = img.height * 0.27; // Aproximadamente 42% de la altura
-    
-    // Dividir texto en líneas si es muy largo
-    const maxWidth = img.width * 0.84; // 84% del ancho disponible
-    const lines = wrapText(ctx, devolucion_alejo, maxWidth);
-    
-    // Dibujar cada línea
+
+    // ===== Devolución Alejo =====
+    const alejoX = img.width * 0.10;
+    const alejoY = img.height * 0.27;
+    const maxWidth = img.width * 0.84;
+    const alejoLines = wrapTextMultiline(ctx, devolucion_alejo, maxWidth);
     const lineHeight = 25;
-    lines.forEach((line, index) => {
+
+    alejoLines.forEach((line, index) => {
       ctx.fillText(line, alejoX, alejoY + (index * lineHeight));
     });
 
-    // ===== DEVOLUCION TEORICA (debajo de "• Puntuación:" de la sección teórica) =====
-    ctx.fillStyle = 'white';
+    // ===== Devolución Teórica =====
     ctx.font = '16px Arial';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-    
-    // Coordenadas para la sección de evaluación teórica (debajo del bullet point)
-    const teoricaX = img.width * 0.12; // 12% del ancho desde la izquierda (indentado)
-    const teoricaY = img.height * 0.74; // 77% de la altura
-    
-    // Dividir texto en líneas si es muy largo
-    const teoricaMaxWidth = img.width * 0.80; // 80% del ancho disponible
-    const teoricaLines = wrapText(ctx, devolucion_teorica, teoricaMaxWidth);
-    
-    // Dibujar cada línea
+    const teoricaX = img.width * 0.12;
+    const teoricaY = img.height * 0.74;
+    const teoricaMaxWidth = img.width * 0.80;
+    const teoricaLines = wrapTextMultiline(ctx, devolucion_teorica, teoricaMaxWidth);
     const teoricaLineHeight = 22;
+
     teoricaLines.forEach((line, index) => {
       ctx.fillText(line, teoricaX, teoricaY + (index * teoricaLineHeight));
     });
 
-    console.log('✅ Completado');
+    console.log('✅ Diploma generado correctamente');
 
-    // Enviar respuesta
     res.set('Content-Type', 'image/png');
     canvas.createPNGStream().pipe(res);
 
