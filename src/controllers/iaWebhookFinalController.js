@@ -2,12 +2,12 @@ const path = require('path');
 const { createCanvas, loadImage, registerFont } = require('canvas');
 const axios = require('axios');
 
-// Registrar fuente
+// Registrar fuente personalizada
 registerFont(path.join(__dirname, '..', 'fonts', 'BrittanySignature.ttf'), {
   family: 'Brittany Signature'
 });
 
-// Envoltura de texto
+// Función para envolver texto con saltos de línea automáticos
 function wrapTextMultiline(ctx, text, maxWidth) {
   const paragraphs = text.split('\n');
   const lines = [];
@@ -35,7 +35,7 @@ function wrapTextMultiline(ctx, text, maxWidth) {
   return lines;
 }
 
-// Handler
+// Función principal
 const handleIaWebhookFinal = async (req, res) => {
   try {
     const {
@@ -46,57 +46,55 @@ const handleIaWebhookFinal = async (req, res) => {
       puntuacion = '8/10'
     } = req.body;
 
+    // URL de la plantilla base
     const imageUrl = 'https://i.ibb.co/PZxLnTyy/Devolucio-n3-1.png';
 
-    // Descargar fondo
+    // Descargar y preparar imagen base
     const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
     const buffer = Buffer.from(response.data, 'binary');
     const img = await loadImage(buffer);
     const canvas = createCanvas(img.width, img.height);
     const ctx = canvas.getContext('2d');
+
     ctx.drawImage(img, 0, 0);
-
-    const centerX = img.width / 2;
-
     ctx.fillStyle = 'white';
-    ctx.textAlign = 'left';
+    const centerX = img.width / 2;
+    const maxWidth = 980;
 
-    // === Erick ===
+    // === TEXTO DE ERICK ===
+    ctx.textAlign = 'left';
     ctx.font = '22px Arial';
     const erickX = 110;
     const erickY = 505;
-    const maxWidth = 980;
     const erickLines = wrapTextMultiline(ctx, devolucion_erick, maxWidth);
     erickLines.forEach((line, i) => {
-      ctx.fillText(line, erickX, erickY + i * 28);
+      ctx.fillText(line, erickX, erickY + i * 30);
     });
 
-    // === Alejo ===
+    // === TEXTO DE ALEJO ===
     const alejoX = 110;
-    const alejoY = 775;
+    const alejoY = 780; // Fijo más abajo
     const alejoLines = wrapTextMultiline(ctx, devolucion_ale, maxWidth);
     alejoLines.forEach((line, i) => {
-      ctx.fillText(line, alejoX, alejoY + i * 28);
+      ctx.fillText(line, alejoX, alejoY + i * 30);
     });
 
-    // === Puntuación Final ===
+    // === PUNTUACIÓN FINAL ===
     ctx.textAlign = 'center';
     ctx.font = 'bold 54px Arial';
-    const scoreY = 1135;
-    ctx.fillText(puntuacion, centerX, scoreY);
+    ctx.fillText(puntuacion, centerX, 1135);
 
-    // === Nombre del Alumno ===
+    // === NOMBRE DEL ALUMNO ===
     ctx.font = '60px "Brittany Signature"';
-    const nameY = 1420;
-    ctx.fillText(nombre, centerX, nameY);
+    ctx.fillText(nombre, centerX, 1420);
 
-ctx.textAlign = 'left';
-ctx.font = 'bold 24px Arial';
-const idX = centerX + 110; // Mover 100px a la derecha del centro
-const idY = 1590; // Asegurate de usar un valor realista, no 16000
-ctx.fillText(`MF300${ghl_id}`, idX, idY);
+    // === CÓDIGO MF300XXXX ===
+    ctx.textAlign = 'left';
+    ctx.font = 'bold 24px Arial';
+    const idFinal = ghl_id.slice(-4); // Últimos 4 caracteres del ID
+    ctx.fillText(`MF300${idFinal}`, centerX + 110, 1590);
 
-    // Respuesta final
+    // === SALIDA ===
     res.set('Content-Type', 'image/png');
     canvas.createPNGStream().pipe(res);
   } catch (error) {
