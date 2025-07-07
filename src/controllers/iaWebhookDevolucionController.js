@@ -7,7 +7,7 @@ exports.handleIaWebhookDevolucion = async (req, res) => {
   try {
     const nombre = req.body.nombre || 'Nombre de Prueba';
     const devolucion_erick = req.body.devolucion_erick || 'Texto de prueba largo para devolución técnica.';
-    const imageUrl = 'https://i.ibb.co/DHNgFvgg/Devolucio-n1-1.png';
+    const imageUrl = 'https://i.ibb.co/YFjxyqDt/Devolucio-nerick.png';
 
     console.log('📝 Datos:', { nombre, devolucion_erick });
 
