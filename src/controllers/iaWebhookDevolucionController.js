@@ -60,7 +60,7 @@ exports.handleIaWebhookDevolucion = async (req, res) => {
 
     // ===== Devolución Erick (debajo de "Puntuación del corte:") =====
     ctx.fillStyle = 'white';
-    ctx.font = '28px Arial';
+    ctx.font = '22px Arial';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
 
