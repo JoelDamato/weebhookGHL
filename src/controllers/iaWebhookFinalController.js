@@ -20,6 +20,9 @@ exports.handleIaWebhookFinal = async (req, res) => {
     const img = await loadImage(buffer);
     const canvas = createCanvas(img.width, img.height);
     const ctx = canvas.getContext('2d');
+
+    // 🔥 Dibujar imagen de fondo
+    ctx.drawImage(img, 0, 0);
     
     console.log(`📐 Dimensiones: ${img.width}x${img.height}`);
 
@@ -41,7 +44,7 @@ exports.handleIaWebhookFinal = async (req, res) => {
     const idY = (img.height * 3) / 4 + 92;
     ctx.fillText(`MF3: ${ghl_id}`, idX, idY);
 
-    // ===== DEVOLUCION FINAL =====
+    // ===== DEVOLUCIÓN FINAL =====
     ctx.fillStyle = 'white';
     ctx.font = 'bold 28px Arial';
     ctx.textAlign = 'center';
@@ -52,7 +55,7 @@ exports.handleIaWebhookFinal = async (req, res) => {
 
     console.log('✅ Completado');
 
-    // Enviar respuesta
+    // Enviar imagen como respuesta PNG
     res.set('Content-Type', 'image/png');
     canvas.createPNGStream().pipe(res);
 

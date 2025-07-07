@@ -3,15 +3,13 @@ const fs = require('fs');
 const { createCanvas, loadImage, registerFont } = require('canvas');
 const axios = require('axios');
 
-// Ruta real a la fuente (fuente ubicada en: src/fonts/BrittanySignature.ttf)
 const fontPath = path.join(__dirname, '..', 'fonts', 'BrittanySignature.ttf');
 
-// Verificamos si la fuente existe antes de registrarla
 if (fs.existsSync(fontPath)) {
   console.log('🔤 Registrando fuente Brittany Signature...');
   registerFont(fontPath, { family: 'Brittany Signature' });
 } else {
-  console.warn('⚠️ Fuente Brittany Signature NO encontrada en:', fontPath);
+  console.warn('⚠️ Fuente NO encontrada en:', fontPath);
 }
 
 exports.handleIaWebhook = async (req, res) => {
@@ -24,7 +22,6 @@ exports.handleIaWebhook = async (req, res) => {
 
     console.log('📝 Datos recibidos:', { nombre, ghl_id });
 
-    // Descargar imagen base
     const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
     const buffer = Buffer.from(response.data, 'binary');
     const img = await loadImage(buffer);
@@ -32,12 +29,9 @@ exports.handleIaWebhook = async (req, res) => {
     const canvas = createCanvas(img.width, img.height);
     const ctx = canvas.getContext('2d');
 
-    console.log(`📐 Dimensiones de imagen: ${img.width}x${img.height}`);
-
-    // Dibujar la imagen de fondo
     ctx.drawImage(img, 0, 0);
 
-    // ====== NOMBRE ======
+    // ====== Nombre en el centro ======
     ctx.fillStyle = 'white';
     ctx.font = '80px "Brittany Signature"';
     ctx.textAlign = 'center';
@@ -45,29 +39,28 @@ exports.handleIaWebhook = async (req, res) => {
 
     const centerX = img.width / 2;
     const nameY = img.height / 2 - 140;
-    console.log(`📍 Posición del nombre: (${centerX}, ${nameY})`);
-
     ctx.fillText(nombre, centerX, nameY);
 
-    // ====== ID ======
+    // ====== ID al lado de "Diploma" (parte inferior izquierda) ======
     ctx.fillStyle = 'white';
     ctx.font = 'bold 24px Arial';
-    ctx.textAlign = 'center';
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
 
-    const idX = img.width / 2 + 100;
-    const idY = (img.height * 3) / 4 + 92;
+    const diplomaX = 402;         // X donde comienza la palabra "Diploma"
+    const diplomaY = 1531;        // Y donde está "Diploma" en la imagen
+    const diplomaText = 'Diploma';
+    const diplomaWidth = ctx.measureText(diplomaText).width;
+
     const ghl_id_last4 = ghl_id.toString().slice(-4);
+    const idText = 'Nº MF300' + ghl_id_last4;
 
-    console.log(`🏷️ Posición del ID: (${idX}, ${idY})`);
+    const marginBetween = 20;
+    const idX = diplomaX + diplomaWidth + marginBetween;
 
-    ctx.fillText('Nº MF', idX - 18, idY);
-    ctx.font = 'bold 18px Arial';
-    ctx.fillText(ghl_id_last4, idX + 32, idY);
+    ctx.fillText(idText, idX, diplomaY);
 
     console.log('✅ Diploma generado correctamente.');
-
-    // Enviar imagen como respuesta
     res.set('Content-Type', 'image/png');
     canvas.createPNGStream().pipe(res);
 
