@@ -48,13 +48,13 @@ exports.handleIaWebhookDevolucion = async (req, res) => {
 
     // ===== Nombre (alineado a la derecha de "Hola") =====
     ctx.fillStyle = 'white';
-    ctx.font = 'bold 36px Arial';
+    ctx.font = 'bold 34px Arial';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
 
-    const holaX = img.width * 0.17; // Coordenada horizontal de "Hola"
+    const holaX = img.width * 0.13; // Coordenada horizontal de "Hola"
     const nombreX = holaX + 300; // Un poco a la derecha
-    const nombreY = img.height * 0.21; // Justo debajo de "Hola"
+    const nombreY = img.height * 0.212; // Justo debajo de "Hola"
 
     ctx.fillText(nombre, nombreX, nombreY);
 
@@ -65,7 +65,7 @@ exports.handleIaWebhookDevolucion = async (req, res) => {
     ctx.textBaseline = 'top';
 
     const idX = img.width * 0.12; // Margen izquierdo
-    const idY = img.height * 0.47; // Ajustado para estar justo debajo de "Puntuación del corte:"
+    const idY = img.height * 0.40; // Ajustado para estar justo debajo de "Puntuación del corte:"
 
     wrapText(ctx, `• ${devolucion_erick}`, idX, idY, img.width * 0.75, 36);
 
