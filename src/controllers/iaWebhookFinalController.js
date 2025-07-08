@@ -64,7 +64,7 @@ const handleIaWebhookFinal = async (req, res) => {
     // === TEXTO DE ERICK ===
     ctx.textAlign = 'left';
     ctx.font = '22px Arial';
-    const erickX = 110;
+    const erickX = 50;
     const erickY = 505;
     const erickLines = wrapTextMultiline(ctx, devolucion_erick, maxWidth);
     erickLines.forEach((line, i) => {
@@ -72,7 +72,7 @@ const handleIaWebhookFinal = async (req, res) => {
     });
 
     // === TEXTO DE ALEJO ===
-    const alejoX = 110;
+    const alejoX = 50;
     const alejoY = 780; // Fijo más abajo
     const alejoLines = wrapTextMultiline(ctx, devolucion_ale, maxWidth);
     alejoLines.forEach((line, i) => {
