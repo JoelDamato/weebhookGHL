@@ -49,44 +49,41 @@ exports.handleIaWebhookDevolucion = async (req, res) => {
       }
     }
 
-    // Estilo general del texto
+    // === Estilo general ===
     ctx.fillStyle = 'white';
-    ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
 
+    // ===== Nombre centrado =====
+    ctx.font = 'bold 30px Arial';
+    ctx.textAlign = 'center';
+    const nombreX = img.width / 2;
+    const nombreY = img.height * 0.212;
+    ctx.fillText(nombre, nombreX, nombreY);
 
-ctx.font = 'bold 30px Arial';
-ctx.textAlign = 'center'; // centrado horizontal
-ctx.textBaseline = 'top';
-
-const nombreX = img.width / 2;         // centro de la imagen
-const nombreY = img.height * 0.212;    // posición vertical como antes
-ctx.fillText(nombre, nombreX, nombreY);
-
-
-    // Estilo para bloques de texto
+    // ===== Estilo para bloques de texto centrados =====
     ctx.font = '22px Arial';
+    ctx.textAlign = 'center';
+    const centerX = img.width / 2;
     const maxWidth = img.width * 0.75;
-    const idX = img.width * 0.12;
 
-    // ===== Puntuación del corte =====
+    // ===== Puntuación del corte (Fade) =====
     if (fade) {
-      wrapText(ctx, `• ${fade}`,  idX + 30, img.height * 0.447, maxWidth, 36);
+      wrapText(ctx, `• ${fade}`, centerX, img.height * 0.447, maxWidth, 36);
     }
 
     // ===== Visagismo =====
     if (visagismo) {
-      wrapText(ctx, `• ${visagismo}`, idX + 30, img.height * 0.583, maxWidth, 36);
+      wrapText(ctx, `• ${visagismo}`, centerX, img.height * 0.583, maxWidth, 36);
     }
 
     // ===== Detalles del corte =====
     if (detalles) {
-      wrapText(ctx, `• ${detalles}`, idX + 30, img.height * 0.729, maxWidth, 36);
+      wrapText(ctx, `• ${detalles}`, centerX, img.height * 0.729, maxWidth, 36);
     }
 
     // ===== Consejo =====
     if (consejo) {
-      wrapText(ctx, `• ${consejo}`, idX + 30, img.height * 0.867, maxWidth, 36);
+      wrapText(ctx, `• ${consejo}`, centerX, img.height * 0.867, maxWidth, 36);
     }
 
     console.log('✅ Devolución generada correctamente');
