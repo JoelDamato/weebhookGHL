@@ -54,11 +54,15 @@ exports.handleIaWebhookDevolucion = async (req, res) => {
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
 
-    // ===== Nombre (debajo de "Jota Damo") =====
-    ctx.font = 'bold 34px Arial';
-    const nombreX = img.width * 0.13 + 300;
-    const nombreY = img.height * 0.212;
-    ctx.fillText(nombre, nombreX, nombreY);
+
+ctx.font = 'bold 30px Arial';
+ctx.textAlign = 'center'; // centrado horizontal
+ctx.textBaseline = 'top';
+
+const nombreX = img.width / 2;         // centro de la imagen
+const nombreY = img.height * 0.212;    // posición vertical como antes
+ctx.fillText(nombre, nombreX, nombreY);
+
 
     // Estilo para bloques de texto
     ctx.font = '22px Arial';
@@ -67,22 +71,22 @@ exports.handleIaWebhookDevolucion = async (req, res) => {
 
     // ===== Puntuación del corte =====
     if (fade) {
-      wrapText(ctx, `• ${fade}`,  idX + 30, img.height * 0.448, maxWidth, 36);
+      wrapText(ctx, `• ${fade}`,  idX + 30, img.height * 0.447, maxWidth, 36);
     }
 
     // ===== Visagismo =====
     if (visagismo) {
-      wrapText(ctx, `• ${visagismo}`, idX + 30, img.height * 0.58, maxWidth, 36);
+      wrapText(ctx, `• ${visagismo}`, idX + 30, img.height * 0.583, maxWidth, 36);
     }
 
     // ===== Detalles del corte =====
     if (detalles) {
-      wrapText(ctx, `• ${detalles}`, idX + 30, img.height * 0.72, maxWidth, 36);
+      wrapText(ctx, `• ${detalles}`, idX + 30, img.height * 0.729, maxWidth, 36);
     }
 
     // ===== Consejo =====
     if (consejo) {
-      wrapText(ctx, `• ${consejo}`, idX + 30, img.height * 0.86, maxWidth, 36);
+      wrapText(ctx, `• ${consejo}`, idX + 30, img.height * 0.867, maxWidth, 36);
     }
 
     console.log('✅ Devolución generada correctamente');
