@@ -2,14 +2,17 @@ const { createCanvas, loadImage } = require('canvas');
 const axios = require('axios');
 
 exports.handleIaWebhookDevolucion = async (req, res) => {
-  console.log('🚀 Generando diploma con Arial (Devolución)...');
+  console.log('🚀 Generando devolución...');
 
   try {
     const nombre = req.body.nombre || 'Nombre de Prueba';
-    const devolucion_erick = req.body.devolucion_erick || 'Texto de prueba largo para devolución técnica.';
-    const imageUrl = 'https://i.ibb.co/YFjxyqDt/Devolucio-nerick.png';
+    const fade = req.body.fade || '';
+    const visagismo = req.body.visagismo || '';
+    const detalles = req.body.detalles || '';
+    const consejo = req.body.consejo || '';
+    const imageUrl = 'https://i.ibb.co/xdXwwHg/Devolucio-n1domingo.png';
 
-    console.log('📝 Datos:', { nombre, devolucion_erick });
+    console.log('📝 Datos:', { nombre, fade, visagismo, detalles, consejo });
 
     // Descargar imagen base
     const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
@@ -23,7 +26,7 @@ exports.handleIaWebhookDevolucion = async (req, res) => {
 
     console.log(`📐 Dimensiones: ${img.width}x${img.height}`);
 
-    // ===== Función para hacer wrap del texto largo =====
+    // Función para hacer wrap del texto largo
     function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
       const paragraphs = text.split('\n');
       for (let para of paragraphs) {
@@ -46,36 +49,49 @@ exports.handleIaWebhookDevolucion = async (req, res) => {
       }
     }
 
-    // ===== Nombre (alineado a la derecha de "Hola") =====
+    // Estilo general del texto
     ctx.fillStyle = 'white';
-    ctx.font = 'bold 34px Arial';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
 
-    const holaX = img.width * 0.13; // Coordenada horizontal de "Hola"
-    const nombreX = holaX + 300; // Un poco a la derecha
-    const nombreY = img.height * 0.212; // Justo debajo de "Hola"
-
+    // ===== Nombre (debajo de "Jota Damo") =====
+    ctx.font = 'bold 34px Arial';
+    const nombreX = img.width * 0.13 + 300;
+    const nombreY = img.height * 0.212;
     ctx.fillText(nombre, nombreX, nombreY);
 
-    // ===== Devolución Erick (debajo de "Puntuación del corte:") =====
-    ctx.fillStyle = 'white';
+    // Estilo para bloques de texto
     ctx.font = '22px Arial';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
+    const maxWidth = img.width * 0.75;
+    const idX = img.width * 0.12;
 
-    const idX = img.width * 0.12; // Margen izquierdo
-    const idY = img.height * 0.40; // Ajustado para estar justo debajo de "Puntuación del corte:"
+    // ===== Puntuación del corte =====
+    if (fade) {
+      wrapText(ctx, `• ${fade}`,  idX + 30, img.height * 0.448, maxWidth, 36);
+    }
 
-    wrapText(ctx, `• ${devolucion_erick}`, idX, idY, img.width * 0.75, 36);
+    // ===== Visagismo =====
+    if (visagismo) {
+      wrapText(ctx, `• ${visagismo}`, idX + 30, img.height * 0.58, maxWidth, 36);
+    }
 
-    console.log('✅ Completado');
+    // ===== Detalles del corte =====
+    if (detalles) {
+      wrapText(ctx, `• ${detalles}`, idX + 30, img.height * 0.72, maxWidth, 36);
+    }
+
+    // ===== Consejo =====
+    if (consejo) {
+      wrapText(ctx, `• ${consejo}`, idX + 30, img.height * 0.86, maxWidth, 36);
+    }
+
+    console.log('✅ Devolución generada correctamente');
 
     // Enviar imagen como respuesta
     res.set('Content-Type', 'image/png');
     canvas.createPNGStream().pipe(res);
   } catch (error) {
-    console.error('💥 Error:', error);
-    res.status(500).json({ error: 'Error generando diploma' });
+    console.error('💥 Error al generar la devolución:', error);
+    res.status(500).json({ error: 'Error generando devolución' });
   }
 };

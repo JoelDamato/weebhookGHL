@@ -33,7 +33,7 @@ exports.handleIaWebhook = async (req, res) => {
 
     // ====== Nombre en el centro ======
     ctx.fillStyle = 'white';
-    ctx.font = '80px "Brittany Signature"';
+    ctx.font = '55px "Brittany Signature"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 

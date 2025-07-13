@@ -85,7 +85,7 @@ const handleIaWebhookFinal = async (req, res) => {
     ctx.fillText(puntuacion, centerX, 1135);
 
     // === NOMBRE DEL ALUMNO ===
-    ctx.font = '60px "Brittany Signature"';
+    ctx.font = '50px "Brittany Signature"';
     ctx.fillText(nombre, centerX, 1420);
 
     // === CÓDIGO MF300XXXX ===

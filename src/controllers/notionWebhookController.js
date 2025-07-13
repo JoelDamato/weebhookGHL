@@ -112,7 +112,8 @@ exports.handleNotionWebhook = async (req, res) => {
         { id: "hXPfmoL0QAeqYbSiNwNZ", value: utm_source },
         { id: "gq73k4n4NPhXuWuXfOqU", value: utm_content },
         { id: "r80EDqrSrlaBt82Csf7k", value: estadoUltimoComprobante },
-        { id: "zesJzuiFA438RMQvCGiE", value: pais } // <-- País
+        { id: "zesJzuiFA438RMQvCGiE", value: pais },
+        { id: "6WiL7buXgUEpIpXm79Xw", value: "notion" }  // <-- País
       ].filter((f) => f.value), // Filtra los vacíos
     };
 
