@@ -1,5 +1,11 @@
-const { createCanvas, loadImage } = require('canvas');
+const path = require('path');
+const { createCanvas, loadImage, registerFont } = require('canvas');
 const axios = require('axios');
+
+// Registrar fuente personalizada
+registerFont(path.join(__dirname, '..', 'fonts', '29lt-riwaya-regular.ttf'), {
+  family: 'Riwaya'
+});
 
 exports.handleIaWebhookDevolucion = async (req, res) => {
   console.log('🚀 Generando devolución...');
@@ -53,15 +59,15 @@ exports.handleIaWebhookDevolucion = async (req, res) => {
     ctx.fillStyle = 'white';
     ctx.textBaseline = 'top';
 
-    // ===== Nombre centrado =====
-    ctx.font = 'bold 30px Arial';
+    // ===== Nombre centrado con fuente Riwaya =====
+    ctx.font = '30px "Riwaya"';
     ctx.textAlign = 'center';
     const nombreX = img.width / 2;
     const nombreY = img.height * 0.212;
     ctx.fillText(nombre, nombreX, nombreY);
 
-    // ===== Estilo para bloques de texto centrados =====
-    ctx.font = '22px Arial';
+    // ===== Estilo para bloques de texto también con Riwaya =====
+    ctx.font = '22px "Riwaya"';
     ctx.textAlign = 'center';
     const centerX = img.width / 2;
     const maxWidth = img.width * 0.75;
@@ -73,7 +79,7 @@ exports.handleIaWebhookDevolucion = async (req, res) => {
 
     // ===== Visagismo =====
     if (visagismo) {
-      wrapText(ctx, `• ${visagismo}`, centerX, img.height * 0.583, maxWidth, 36);
+      wrapText(ctx, `• ${visagismo}`, centerX, img.height * 0.591, maxWidth, 36);
     }
 
     // ===== Detalles del corte =====
