@@ -96,7 +96,7 @@ exports.handleIaWebhookAlejo = async (req, res) => {
     const devolucionY = img.height * 0.26;
     const consejoY = img.height * 0.42;
 
-    const puntosTeoricaY = img.height * 0.619;
+    const puntosTeoricaY = img.height * 0.616;
     const devolucionTeoricaY = img.height * 0.64;
     const consejoTeoricaY = img.height * 0.82;
 
