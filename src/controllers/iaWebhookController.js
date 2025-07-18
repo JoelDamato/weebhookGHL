@@ -18,7 +18,7 @@ exports.handleIaWebhook = async (req, res) => {
   try {
     const nombre = req.body.nombre || 'Nombre de Prueba';
     const ghl_id = req.body.ghl_id || 'ID123';
-    const imageUrl = 'https://i.ibb.co/c5zTvqw/Diploma-Mf-3-0.png';
+    const imageUrl = 'https://i.ibb.co/0jv8cQ7q/Whats-App-Image-2025-07-18-at-12-53-04-cedd078d.jpg';
 
     console.log('📝 Datos recibidos:', { nombre, ghl_id });
 
