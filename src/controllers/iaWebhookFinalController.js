@@ -71,7 +71,7 @@ exports.handleIaWebhookFinal = async (req, res) => {
 
     // === TEXTO DE ERICK Y ALEJO (con márgenes) ===
     ctx.textAlign = 'left';
-    ctx.font = '24px "29LT Riwaya"';
+    ctx.font = '26px "29LT Riwaya"';
 
     const erickLines = wrapTextMultiline(ctx, devolucion_erick, maxWidth);
     erickLines.forEach((line, i) => {
@@ -85,16 +85,16 @@ exports.handleIaWebhookFinal = async (req, res) => {
 
     // === PUNTUACIÓN FINAL (centrado) ===
     ctx.textAlign = 'center';
-    ctx.font = '70px "29LT Riwaya"';
-    ctx.fillText(puntuacion, centerX, 1060);
+    ctx.font = '80px "29LT Riwaya"';
+    ctx.fillText(puntuacion, centerX, 1045);
 
     // === NOMBRE DEL ALUMNO (centrado con Brittany Signature) ===
-    ctx.font = '50px "Brittany Signature"';
+    ctx.font = '55px "Brittany Signature"';
     ctx.fillText(nombre, centerX, 1385);
 
     // === CÓDIGO MF300XXXX (alineado a la izquierda) ===
     ctx.textAlign = 'left';
-    ctx.font = '24px "29LT Riwaya"';
+    ctx.font = '26px "29LT Riwaya"';
     const idFinal = ghl_id.slice(-4);
     const codigoFinal = `MF300${idFinal}`;
     ctx.fillText(codigoFinal, centerX + 2, 1565);

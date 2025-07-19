@@ -59,7 +59,7 @@ exports.handleIaWebhookAlejo = async (req, res) => {
     ctx.fillStyle = 'white';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
-    ctx.font = '24px "29LT Riwaya"';
+    ctx.font = '26px "29LT Riwaya"';
     
     const lineHeight = 30;
     const marginX = 72;
@@ -67,9 +67,9 @@ exports.handleIaWebhookAlejo = async (req, res) => {
 
     // === Textos dinámicos ===
    if (puntos) {
-  ctx.font = '70px "29LT Riwaya"';
-  ctx.fillText(`${puntos}`, img.width * 0.439, img.height * 0.482);
-  ctx.font = '24px "29LT Riwaya"'; // restaurar fuente original
+  ctx.font = '80px "29LT Riwaya"';
+  ctx.fillText(`${puntos}`, img.width * 0.428, img.height * 0.472);
+  ctx.font = '26px "29LT Riwaya"'; // restaurar fuente original
 }
 
     if (devolucion) {
@@ -85,9 +85,9 @@ exports.handleIaWebhookAlejo = async (req, res) => {
       });
     }
     if (puntos_teorica){
-  ctx.font = '70px "29LT Riwaya"';
-  ctx.fillText(`${puntos}`, img.width * 0.439, img.height * 0.846);
-  ctx.font = '24px "29LT Riwaya"'; // restaurar fuente original
+  ctx.font = '80px "29LT Riwaya"';
+  ctx.fillText(`${puntos}`, img.width * 0.428, img.height * 0.838);
+  ctx.font = '26px "29LT Riwaya"'; // restaurar fuente original
 }
     
     if (devolucion_teorica) {

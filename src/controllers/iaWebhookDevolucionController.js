@@ -66,7 +66,7 @@ exports.handleIaWebhookDevolucion = async (req, res) => {
 
     // === Texto alineado a la izquierda con márgenes fijos de 72px ===
     ctx.textAlign = 'left';
-    ctx.font = '24px "29LT Riwaya"';
+    ctx.font = '26px "29LT Riwaya"';
     const leftX = 72;
     const maxWidth = img.width - 144; // 72px de cada lado
 
@@ -78,9 +78,9 @@ exports.handleIaWebhookDevolucion = async (req, res) => {
     // === Puntuación final centrada y dorada ===
     if (puntuacion) {
       ctx.textAlign = 'center';
-      ctx.font = '70px "29LT Riwaya"';
+      ctx.font = '80px "29LT Riwaya"';
       ctx.fillStyle = '#ffffff'; 
-      ctx.fillText(`${puntuacion}`, img.width / 2, img.height * 0.846);
+      ctx.fillText(`${puntuacion}`, img.width / 2, img.height * 0.840);
       ctx.fillStyle = 'white'; 
     }
 
