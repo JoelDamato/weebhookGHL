@@ -18,7 +18,7 @@ exports.handleIaWebhook = async (req, res) => {
   try {
     const nombre = req.body.nombre || 'Nombre de Prueba';
     const ghl_id = req.body.ghl_id || 'ID123';
-    const imageUrl = 'https://i.ibb.co/0jv8cQ7q/Whats-App-Image-2025-07-18-at-12-53-04-cedd078d.jpg';
+    const imageUrl = 'https://i.ibb.co/9m3zJqkx/Diploma-Mf-3-0.png';
 
     console.log('📝 Datos recibidos:', { nombre, ghl_id });
 
@@ -43,7 +43,7 @@ exports.handleIaWebhook = async (req, res) => {
 
     // ====== ID al lado de "Diploma" (parte inferior izquierda) ======
     ctx.fillStyle = 'white';
-    ctx.font = 'bold 24px Arial';
+    ctx.font = '24px Arial';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
 
