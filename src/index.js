@@ -9,6 +9,8 @@ const iaWebhookController = require('./controllers/iaWebhookController');
 const iaWebhookDevolucionController = require('./controllers/iaWebhookDevolucionController');
 const iaWebhookAlejoController = require('./controllers/iaWebhookAlejoController');
 const iaWebhookFinalController = require('./controllers/iaWebhookFinalController');
+const iaWebhookGptImageController = require('./controllers/iaWebhookGptImageController.js/index.js');
+
 
 const path = require('path');
 
@@ -23,6 +25,8 @@ app.post('/webhook/ia/jota', iaWebhookController.handleIaWebhook);
 app.post('/webhook/ia/erick', iaWebhookDevolucionController.handleIaWebhookDevolucion);
 app.post('/webhook/ia/alejo', iaWebhookAlejoController.handleIaWebhookAlejo);
 app.post('/webhook/ia/final', iaWebhookFinalController.handleIaWebhookFinal);
+app.post('/webhook/ia/gpt-image', iaWebhookGptImageController.handleIaWebhookGptImage);
+
 
 // Servir archivos estáticos desde /public
 app.use('/public', require('express').static(path.join(__dirname, '..', 'public')));
