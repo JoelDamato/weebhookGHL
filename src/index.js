@@ -9,7 +9,7 @@ const iaWebhookController = require('./controllers/iaWebhookController');
 const iaWebhookDevolucionController = require('./controllers/iaWebhookDevolucionController');
 const iaWebhookAlejoController = require('./controllers/iaWebhookAlejoController');
 const iaWebhookFinalController = require('./controllers/iaWebhookFinalController');
-const iaWebhookGptImageController = require('./controllers/iaWebhookGptImageController.js/index.js');
+const iaWebhookGptImageController = require('./controllers/iaWebhookGptImageController.js');
 
 
 const path = require('path');
