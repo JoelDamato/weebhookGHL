@@ -1,10 +1,10 @@
 const axios = require("axios");
 
 exports.handleIaWebhookGptImage = async (req, res) => {
-  const { imageUrl, prompt } = req.body;
+  const { imageUrl, prompt, language } = req.body;
 
-  if (!imageUrl || !prompt) {
-    return res.status(400).json({ respuesta: "Faltan datos: imagenUrl o prompt." });
+  if (!imageUrl || !prompt || !language) {
+    return res.status(400).json({ respuesta: "Faltan datos: imageUrl, prompt o language." });
   }
 
   try {
@@ -17,6 +17,7 @@ exports.handleIaWebhookGptImage = async (req, res) => {
           {
             role: "user",
             content: [
+              { type: "text", text: `Responde en ${language}.` },
               { type: "text", text: prompt },
               {
                 type: "image_url",
