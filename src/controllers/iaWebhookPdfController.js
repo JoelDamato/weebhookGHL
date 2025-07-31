@@ -8,13 +8,11 @@ const fs = require('fs');
 exports.handleIaWebhookPdf = async (req, res) => {
     try {
         // Extraemos las URLs de las imágenes del cuerpo de la petición.
-        // Nos aseguramos de que coincidan con la mayúscula y minúsculas exactas.
-        const imageUrls = [
-            req.body.Imagen1,
-            req.body.imagen2,
-            req.body.imagen3,
-            req.body.imagen4
-        ];
+        // Ahora usamos las claves con la 'I' mayúscula para que coincidan.
+        const { Imagen1, Imagen2, Imagen3, Imagen4 } = req.body;
+        
+        // Creamos un array con las URLs
+        const imageUrls = [ Imagen1, Imagen2, Imagen3, Imagen4 ];
 
         // Verificamos que todas las URLs sean válidas antes de continuar
         if (!imageUrls.every(url => url && typeof url === 'string')) {
@@ -23,14 +21,13 @@ exports.handleIaWebhookPdf = async (req, res) => {
 
         console.log('Recibidas 4 URLs de imágenes, descargando...');
 
-        // Descargamos las imágenes de forma paralela para mayor eficiencia
+        // Descargamos las imágenes de forma paralela
         const downloadPromises = imageUrls.map(url =>
             axios.get(url, {
-                responseType: 'arraybuffer' // Aseguramos que la respuesta sea un buffer de datos
+                responseType: 'arraybuffer'
             })
         );
 
-        // Esperamos a que todas las descargas se completen
         const responses = await Promise.all(downloadPromises);
         const imagesBuffers = responses.map(response => Buffer.from(response.data));
 
@@ -47,7 +44,6 @@ exports.handleIaWebhookPdf = async (req, res) => {
 
         console.log('PDF creado con éxito.');
 
-        // Enviamos el PDF como respuesta a la petición de n8n
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename="reporte_final.pdf"');
         
