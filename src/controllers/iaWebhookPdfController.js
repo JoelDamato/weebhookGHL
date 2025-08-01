@@ -31,7 +31,8 @@ exports.handleIaWebhookPdf = async (req, res) => {
         const downloadPromises = imageUrls.map(url =>
             axios.get(url, {
                 responseType: 'arraybuffer',
-                validateStatus: status => status === 200
+                validateStatus: status => status === 200,
+                timeout: 30000 // Timeout de 30 segundos
             })
             .catch(error => {
                 log(`Error de descarga para la URL: ${url}`, {
@@ -52,70 +53,120 @@ exports.handleIaWebhookPdf = async (req, res) => {
             return `data:${response.headers['content-type']};base64,${buffer.toString('base64')}`;
         });
 
-        // <<<<<<<<<<<<<<<<<<<<< CÓDIGO CORREGIDO PARA PDFMAKE >>>>>>>>>>>>>>>>>>>>>>>
-        
-        // <<<<<<<<<<<<<<<<<<<<< CÓDIGO SIMPLIFICADO PARA MANTENER PROPORCIÓN >>>>>>>>>>>>>>>>>>>>>>>
-        
-        // Configuración simple que mantiene la proporción de las imágenes
+        log('Imágenes convertidas a base64. Configurando documento PDF...');
+
+        // <<<<<<<<<<<<<<<<<<<<< CONFIGURACIONES OPTIMIZADAS PARA CERTIFICADOS >>>>>>>>>>>>>>>>>>>>>>>
+
+        // OPCIÓN 1: Para certificados que ocupen casi toda la página (RECOMENDADA)
         const documentDefinition = {
             pageSize: 'A4',
-            pageMargins: [0, 0, 0, 0], // Sin márgenes
+            pageMargins: [15, 15, 15, 15], // Márgenes muy pequeños
             content: imagesBase64.map((base64Image, index) => {
                 return {
                     image: base64Image,
-                    // Eliminamos width y height para que pdfmake use el tamaño natural
-                    // y solo escale si es necesario para que quepa en la página
+                    fit: [565, 810], // Ocupa casi toda la página A4
                     alignment: 'center',
                     pageBreak: index > 0 ? 'before' : null
                 };
             })
         };
 
-        // ALTERNATIVA: Si quieres forzar un ancho específico manteniendo proporción
+        // OPCIÓN 2: Para certificados con márgenes estándar
         /*
         const documentDefinition = {
             pageSize: 'A4',
-            pageMargins: [10, 10, 10, 10],
+            pageMargins: [40, 30, 40, 30],
             content: imagesBase64.map((base64Image, index) => {
                 return {
                     image: base64Image,
-                    width: 575, // Ancho fijo, altura se ajusta automáticamente
+                    fit: [515, 780],
                     alignment: 'center',
                     pageBreak: index > 0 ? 'before' : null
                 };
             })
         };
         */
+
+        // OPCIÓN 3: Para certificados en formato apaisado (horizontal)
+        /*
+        const documentDefinition = {
+            pageSize: 'A4',
+            pageOrientation: 'landscape',
+            pageMargins: [20, 20, 20, 20],
+            content: imagesBase64.map((base64Image, index) => {
+                return {
+                    image: base64Image,
+                    fit: [800, 555],
+                    alignment: 'center',
+                    pageBreak: index > 0 ? 'before' : null
+                };
+            })
+        };
+        */
+
+        // OPCIÓN 4: Sin restricciones de tamaño (tamaño original)
+        /*
+        const documentDefinition = {
+            pageSize: 'A4',
+            pageMargins: [20, 20, 20, 20],
+            content: imagesBase64.map((base64Image, index) => {
+                return {
+                    image: base64Image,
+                    // Sin fit, width o height = tamaño original (puede salirse de la página)
+                    alignment: 'center',
+                    pageBreak: index > 0 ? 'before' : null
+                };
+            })
+        };
+        */
+
+        log('Configuración del documento completada. Generando PDF...');
         
-        // Creamos el PDF
+        // Creamos el PDF con configuración optimizada
         const printer = new pdfMake({});
         const pdfDoc = printer.createPdfKitDocument(documentDefinition);
 
         // Convertimos el PDF a un buffer para enviarlo en la respuesta
-        const pdfBuffer = await new Promise(resolve => {
+        const pdfBuffer = await new Promise((resolve, reject) => {
             const chunks = [];
-            pdfDoc.on('data', chunk => chunks.push(chunk));
-            pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
+            
+            pdfDoc.on('data', chunk => {
+                chunks.push(chunk);
+            });
+            
+            pdfDoc.on('end', () => {
+                log('PDF generado exitosamente');
+                resolve(Buffer.concat(chunks));
+            });
+
+            pdfDoc.on('error', (error) => {
+                log('Error al generar PDF', error);
+                reject(error);
+            });
+            
             pdfDoc.end();
         });
 
-        // <<<<<<<<<<<<<<<<<<<<< FIN DEL CÓDIGO CORREGIDO >>>>>>>>>>>>>>>>>>>>>>>
+        log(`PDF creado con éxito. Tamaño: ${pdfBuffer.length} bytes`);
 
-        log('PDF creado con éxito. Enviando respuesta...');
-
+        // Configuramos headers para la respuesta
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'attachment; filename="reporte_final.pdf"');
+        res.setHeader('Content-Disposition', 'attachment; filename="certificados_reporte.pdf"');
+        res.setHeader('Content-Length', pdfBuffer.length);
         
         res.send(pdfBuffer);
         
     } catch (error) {
         log('🔴 Error crítico en el flujo de procesamiento.', {
             message: error.message,
-            stack: error.stack
+            stack: error.stack,
+            type: error.constructor.name
         });
+        
         res.status(500).json({
             success: false,
-            message: 'Error interno del servidor. Por favor, revise el log para más detalles.',
+            message: 'Error interno del servidor al generar PDF.',
+            error: error.message,
             logs: debugLogs
         });
     }
