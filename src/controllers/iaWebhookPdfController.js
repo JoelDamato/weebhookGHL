@@ -67,19 +67,37 @@ exports.handleIaWebhookPdf = async (req, res) => {
 
         // <<<<<<<<<<<<<<<<<<<<< CONFIGURACIONES OPTIMIZADAS PARA CERTIFICADOS >>>>>>>>>>>>>>>>>>>>>>>
 
-        // CONFIGURACIÓN OPTIMIZADA PARA EVITAR TIMEOUTS Y ERRORES 502
+        // CONFIGURACIÓN SIN MÁRGENES BLANCOS - PÁGINA COMPLETA
         const documentDefinition = {
             pageSize: 'A4',
-            pageMargins: [20, 20, 20, 20], // Márgenes moderados
+            pageMargins: [0, 0, 0, 0], // CERO márgenes para eliminar espacios blancos
             content: imagesBase64.map((base64Image, index) => {
                 return {
                     image: base64Image,
-                    fit: [555, 750], // Tamaño más conservador para evitar problemas
+                    width: 595.28, // Ancho exacto de página A4 (sin fit para ocupar todo)
+                    // No especificamos height para mantener proporción
                     alignment: 'center',
                     pageBreak: index > 0 ? 'before' : null
                 };
             })
         };
+
+        // ALTERNATIVA: Si quieres que ocupe tanto ancho como alto completo
+        /*
+        const documentDefinition = {
+            pageSize: 'A4',
+            pageMargins: [0, 0, 0, 0],
+            content: imagesBase64.map((base64Image, index) => {
+                return {
+                    image: base64Image,
+                    width: 595.28,  // Ancho completo A4
+                    height: 841.89, // Alto completo A4 (puede distorsionar)
+                    alignment: 'center',
+                    pageBreak: index > 0 ? 'before' : null
+                };
+            })
+        };
+        */
 
         // OPCIÓN 2: Para certificados con márgenes estándar
         /*
@@ -136,7 +154,7 @@ exports.handleIaWebhookPdf = async (req, res) => {
         const printer = new pdfMake({});
         const pdfDoc = printer.createPdfKitDocument(documentDefinition);
 
-        // Convertimos el PDF a un buffer con timeout más corto
+        // Convertimos el PDF a un buffer con timeout de 2 minutos
         const pdfBuffer = await Promise.race([
             new Promise((resolve, reject) => {
                 const chunks = [];
@@ -158,7 +176,7 @@ exports.handleIaWebhookPdf = async (req, res) => {
                 pdfDoc.end();
             }),
             new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Timeout al generar PDF')), 20000)
+                setTimeout(() => reject(new Error('Timeout al generar PDF después de 2 minutos')), 120000) // 2 minutos
             )
         ]);
 
