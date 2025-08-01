@@ -4,9 +4,11 @@ const pdfMake = require('pdfmake');
 const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
+const sharp = require('sharp'); // Se añade la librería 'sharp' para redimensionar imágenes
+
+// Asegúrate de instalar sharp: npm install sharp
 
 exports.handleIaWebhookPdf = async (req, res) => {
-    // Array para almacenar todos los logs
     const debugLogs = [];
     const log = (message, data = null) => {
         const logEntry = { timestamp: new Date().toISOString(), message: message, data: data };
@@ -32,8 +34,8 @@ exports.handleIaWebhookPdf = async (req, res) => {
             axios.get(url, {
                 responseType: 'arraybuffer',
                 validateStatus: status => status === 200,
-                timeout: 120000, // 2 minutos para descarga
-                maxContentLength: 100 * 1024 * 1024, // Máximo 100MB por imagen
+                timeout: 120000,
+                maxContentLength: 100 * 1024 * 1024,
                 maxBodyLength: 100 * 1024 * 1024
             })
             .catch(error => {
@@ -47,114 +49,48 @@ exports.handleIaWebhookPdf = async (req, res) => {
         
         const responses = await Promise.all(downloadPromises);
         
-        log('Descarga de imágenes completada. Creando PDF...');
+        log('Descarga de imágenes completada. Redimensionando y creando PDF...');
 
-        // Convertimos los buffers a base64 para pdfmake con validación de tamaño
-        const imagesBase64 = responses.map((response, index) => {
+        const processedImagesPromises = responses.map(async (response, index) => {
             const buffer = Buffer.from(response.data);
             const sizeInMB = buffer.length / (1024 * 1024);
+            log(`Imagen ${index + 1}: Tamaño original ${sizeInMB.toFixed(2)}MB`);
+
+            // Usamos 'sharp' para redimensionar la imagen a un tamaño óptimo para A4 (300dpi)
+            const processedImageBuffer = await sharp(buffer)
+                .resize(2480, 3508, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
+                .jpeg({ quality: 90 }) // Opciones de compresión para reducir el tamaño
+                .toBuffer();
+
+            const processedSizeInMB = processedImageBuffer.length / (1024 * 1024);
+            log(`Imagen ${index + 1}: Tamaño redimensionado ${processedSizeInMB.toFixed(2)}MB`);
             
-            log(`Imagen ${index + 1}: Tamaño ${sizeInMB.toFixed(2)}MB`);
-            
-            if (sizeInMB > 10) {
-                log(`⚠️ Advertencia: Imagen ${index + 1} es muy grande (${sizeInMB.toFixed(2)}MB)`);
-            }
-            
-            return `data:${response.headers['content-type']};base64,${buffer.toString('base64')}`;
+            return `data:image/jpeg;base64,${processedImageBuffer.toString('base64')}`;
         });
 
-        log('Imágenes convertidas a base64. Configurando documento PDF...');
+        const imagesBase64 = await Promise.all(processedImagesPromises);
+        
+        log('Imágenes redimensionadas y convertidas a base64. Configurando documento PDF...');
 
-        // <<<<<<<<<<<<<<<<<<<<< CONFIGURACIONES OPTIMIZADAS PARA CERTIFICADOS >>>>>>>>>>>>>>>>>>>>>>>
-
-        // CONFIGURACIÓN PARA OCUPAR TODA LA PÁGINA SIN BORDES BLANCOS
-        const documentDefinition = {
-            pageSize: 'A4',
-            pageMargins: [0, 0, 0, 0], // CERO márgenes
-            content: imagesBase64.map((base64Image, index) => {
-                return {
-                    image: base64Image,
-                    width: 595.28,  // Ancho completo de página A4
-                    height: 841.89, // Alto completo de página A4
-                    alignment: 'center',
-                    pageBreak: index > 0 ? 'before' : null
-                };
-            })
-        };
-
-        // ALTERNATIVA: Si quieres mantener proporción pero sin bordes
-        /*
         const documentDefinition = {
             pageSize: 'A4',
             pageMargins: [0, 0, 0, 0],
             content: imagesBase64.map((base64Image, index) => {
                 return {
                     image: base64Image,
-                    width: 595.28, // Forzar ancho completo
-                    // Sin height para mantener proporción, pero puede quedar algo de borde arriba/abajo
+                    width: 595.28,
+                    height: 841.89,
                     alignment: 'center',
                     pageBreak: index > 0 ? 'before' : null
                 };
             })
         };
-        */
-
-        // OPCIÓN 2: Para certificados con márgenes estándar
-        /*
-        const documentDefinition = {
-            pageSize: 'A4',
-            pageMargins: [40, 30, 40, 30],
-            content: imagesBase64.map((base64Image, index) => {
-                return {
-                    image: base64Image,
-                    fit: [515, 780],
-                    alignment: 'center',
-                    pageBreak: index > 0 ? 'before' : null
-                };
-            })
-        };
-        */
-
-        // OPCIÓN 3: Para certificados en formato apaisado (horizontal)
-        /*
-        const documentDefinition = {
-            pageSize: 'A4',
-            pageOrientation: 'landscape',
-            pageMargins: [20, 20, 20, 20],
-            content: imagesBase64.map((base64Image, index) => {
-                return {
-                    image: base64Image,
-                    fit: [800, 555],
-                    alignment: 'center',
-                    pageBreak: index > 0 ? 'before' : null
-                };
-            })
-        };
-        */
-
-        // OPCIÓN 4: Sin restricciones de tamaño (tamaño original)
-        /*
-        const documentDefinition = {
-            pageSize: 'A4',
-            pageMargins: [20, 20, 20, 20],
-            content: imagesBase64.map((base64Image, index) => {
-                return {
-                    image: base64Image,
-                    // Sin fit, width o height = tamaño original (puede salirse de la página)
-                    alignment: 'center',
-                    pageBreak: index > 0 ? 'before' : null
-                };
-            })
-        };
-        */
 
         log('Configuración del documento completada. Generando PDF...');
         
-        // Creamos el PDF con configuración optimizada
         const printer = new pdfMake({});
         const pdfDoc = printer.createPdfKitDocument(documentDefinition);
 
-        // Convertimos el PDF a un buffer con timeout de 2 minutos
         const pdfBuffer = await Promise.race([
             new Promise((resolve, reject) => {
                 const chunks = [];
@@ -176,13 +112,12 @@ exports.handleIaWebhookPdf = async (req, res) => {
                 pdfDoc.end();
             }),
             new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Timeout al generar PDF después de 2 minutos')), 120000) // 2 minutos
+                setTimeout(() => reject(new Error('Timeout al generar PDF después de 2 minutos')), 120000)
             )
         ]);
 
         log(`PDF creado con éxito. Tamaño: ${pdfBuffer.length} bytes`);
 
-        // Configuramos headers para la respuesta
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename="certificados_reporte.pdf"');
         res.setHeader('Content-Length', pdfBuffer.length);
