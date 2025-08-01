@@ -4,6 +4,7 @@ const pdfMake = require('pdfmake');
 const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
+const sizeOf = require('image-size'); // Agregar esta línea
 
 exports.handleIaWebhookPdf = async (req, res) => {
     // Array para almacenar todos los logs
@@ -46,54 +47,41 @@ exports.handleIaWebhookPdf = async (req, res) => {
         
         log('Descarga de imágenes completada. Creando PDF...');
 
-        // Convertimos los buffers a base64 para pdfmake
-        const imagesBase64 = responses.map(response => {
+        // Convertimos los buffers a base64 para pdfmake Y obtenemos dimensiones
+        const imagesData = responses.map(response => {
             const buffer = Buffer.from(response.data);
-            return `data:${response.headers['content-type']};base64,${buffer.toString('base64')}`;
+            const dimensions = sizeOf(buffer); // Obtener dimensiones reales
+            const base64 = `data:${response.headers['content-type']};base64,${buffer.toString('base64')}`;
+            
+            return {
+                base64,
+                width: dimensions.width,
+                height: dimensions.height
+            };
         });
 
         // <<<<<<<<<<<<<<<<<<<<< CÓDIGO CORREGIDO PARA PDFMAKE >>>>>>>>>>>>>>>>>>>>>>>
         
-        // Definimos las dimensiones de la página A4 en puntos
-        const pageWidth = 595.28;
-        const pageHeight = 841.89;
-        const margins = 20; // Margen pequeño para evitar cortes
-        const maxWidth = pageWidth - (margins * 2);
-        const maxHeight = pageHeight - (margins * 2);
-
-        // Objeto de definición del documento PDF
+        // <<<<<<<<<<<<<<<<<<<<< CÓDIGO PARA MANTENER TAMAÑO ORIGINAL CON DIMENSIONES REALES >>>>>>>>>>>>>>>>>>>>>>>
+        
+        // Configuración para mantener tamaño original de imágenes con dimensiones reales
         const documentDefinition = {
-            pageSize: 'A4',
-            pageMargins: [margins, margins, margins, margins], // Márgenes pequeños
-            content: imagesBase64.map((base64Image, index) => {
-                // OPCIÓN 1: Ajustar proporcionalmente (recomendado)
-                const imageObject = {
-                    image: base64Image,
-                    fit: [maxWidth, maxHeight], // Ajusta la imagen manteniendo proporción
+            pageMargins: [0, 0, 0, 0],
+            content: imagesData.map((imageData, index) => {
+                return {
+                    image: imageData.base64,
+                    // Usar dimensiones reales (convertir de píxeles a puntos: 1px ≈ 0.75pt)
+                    width: imageData.width * 0.75,
+                    height: imageData.height * 0.75,
                     alignment: 'center',
                     pageBreak: index > 0 ? 'before' : null
                 };
-
-                /* OPCIÓN 2: Si quieres que las imágenes ocupen todo el ancho
-                const imageObject = {
-                    image: base64Image,
-                    width: maxWidth,
-                    alignment: 'center',
-                    pageBreak: index > 0 ? 'before' : null
-                };
-                */
-
-                /* OPCIÓN 3: Si quieres que las imágenes ocupen toda la altura
-                const imageObject = {
-                    image: base64Image,
-                    height: maxHeight,
-                    alignment: 'center',
-                    pageBreak: index > 0 ? 'before' : null
-                };
-                */
-
-                return imageObject;
-            })
+            }),
+            // Definir tamaño de página basado en la primera imagen
+            pageSize: {
+                width: imagesData[0].width * 0.75,
+                height: imagesData[0].height * 0.75
+            }
         };
         
         // Creamos el PDF
