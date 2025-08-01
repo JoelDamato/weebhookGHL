@@ -32,7 +32,9 @@ exports.handleIaWebhookPdf = async (req, res) => {
             axios.get(url, {
                 responseType: 'arraybuffer',
                 validateStatus: status => status === 200,
-                timeout: 30000 // Timeout de 30 segundos
+                timeout: 120000, // 2 minutos para descarga
+                maxContentLength: 100 * 1024 * 1024, // Máximo 100MB por imagen
+                maxBodyLength: 100 * 1024 * 1024
             })
             .catch(error => {
                 log(`Error de descarga para la URL: ${url}`, {
@@ -47,9 +49,17 @@ exports.handleIaWebhookPdf = async (req, res) => {
         
         log('Descarga de imágenes completada. Creando PDF...');
 
-        // Convertimos los buffers a base64 para pdfmake
-        const imagesBase64 = responses.map(response => {
+        // Convertimos los buffers a base64 para pdfmake con validación de tamaño
+        const imagesBase64 = responses.map((response, index) => {
             const buffer = Buffer.from(response.data);
+            const sizeInMB = buffer.length / (1024 * 1024);
+            
+            log(`Imagen ${index + 1}: Tamaño ${sizeInMB.toFixed(2)}MB`);
+            
+            if (sizeInMB > 10) {
+                log(`⚠️ Advertencia: Imagen ${index + 1} es muy grande (${sizeInMB.toFixed(2)}MB)`);
+            }
+            
             return `data:${response.headers['content-type']};base64,${buffer.toString('base64')}`;
         });
 
@@ -57,14 +67,14 @@ exports.handleIaWebhookPdf = async (req, res) => {
 
         // <<<<<<<<<<<<<<<<<<<<< CONFIGURACIONES OPTIMIZADAS PARA CERTIFICADOS >>>>>>>>>>>>>>>>>>>>>>>
 
-        // OPCIÓN 1: Para certificados que ocupen casi toda la página (RECOMENDADA)
+        // CONFIGURACIÓN OPTIMIZADA PARA EVITAR TIMEOUTS Y ERRORES 502
         const documentDefinition = {
             pageSize: 'A4',
-            pageMargins: [15, 15, 15, 15], // Márgenes muy pequeños
+            pageMargins: [20, 20, 20, 20], // Márgenes moderados
             content: imagesBase64.map((base64Image, index) => {
                 return {
                     image: base64Image,
-                    fit: [565, 810], // Ocupa casi toda la página A4
+                    fit: [555, 750], // Tamaño más conservador para evitar problemas
                     alignment: 'center',
                     pageBreak: index > 0 ? 'before' : null
                 };
@@ -126,26 +136,31 @@ exports.handleIaWebhookPdf = async (req, res) => {
         const printer = new pdfMake({});
         const pdfDoc = printer.createPdfKitDocument(documentDefinition);
 
-        // Convertimos el PDF a un buffer para enviarlo en la respuesta
-        const pdfBuffer = await new Promise((resolve, reject) => {
-            const chunks = [];
-            
-            pdfDoc.on('data', chunk => {
-                chunks.push(chunk);
-            });
-            
-            pdfDoc.on('end', () => {
-                log('PDF generado exitosamente');
-                resolve(Buffer.concat(chunks));
-            });
+        // Convertimos el PDF a un buffer con timeout más corto
+        const pdfBuffer = await Promise.race([
+            new Promise((resolve, reject) => {
+                const chunks = [];
+                
+                pdfDoc.on('data', chunk => {
+                    chunks.push(chunk);
+                });
+                
+                pdfDoc.on('end', () => {
+                    log('PDF generado exitosamente');
+                    resolve(Buffer.concat(chunks));
+                });
 
-            pdfDoc.on('error', (error) => {
-                log('Error al generar PDF', error);
-                reject(error);
-            });
-            
-            pdfDoc.end();
-        });
+                pdfDoc.on('error', (error) => {
+                    log('Error al generar PDF', error);
+                    reject(error);
+                });
+                
+                pdfDoc.end();
+            }),
+            new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Timeout al generar PDF')), 20000)
+            )
+        ]);
 
         log(`PDF creado con éxito. Tamaño: ${pdfBuffer.length} bytes`);
 
