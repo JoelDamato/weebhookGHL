@@ -67,22 +67,21 @@ exports.handleIaWebhookPdf = async (req, res) => {
 
         // <<<<<<<<<<<<<<<<<<<<< CONFIGURACIONES OPTIMIZADAS PARA CERTIFICADOS >>>>>>>>>>>>>>>>>>>>>>>
 
-        // CONFIGURACIÓN SIN MÁRGENES BLANCOS - PÁGINA COMPLETA
+        // CONFIGURACIÓN SIN MÁRGENES BLANCOS - IMÁGENES MÁS ALTAS
         const documentDefinition = {
             pageSize: 'A4',
             pageMargins: [0, 0, 0, 0], // CERO márgenes para eliminar espacios blancos
             content: imagesBase64.map((base64Image, index) => {
                 return {
                     image: base64Image,
-                    width: 595.28, // Ancho exacto de página A4 (sin fit para ocupar todo)
-                    // No especificamos height para mantener proporción
+                    fit: [595.28, 841.89], // Usa fit para que sea más alto manteniendo proporción
                     alignment: 'center',
                     pageBreak: index > 0 ? 'before' : null
                 };
             })
         };
 
-        // ALTERNATIVA: Si quieres que ocupe tanto ancho como alto completo
+        // ALTERNATIVA: Si quieres controlar más el tamaño específico
         /*
         const documentDefinition = {
             pageSize: 'A4',
@@ -90,8 +89,8 @@ exports.handleIaWebhookPdf = async (req, res) => {
             content: imagesBase64.map((base64Image, index) => {
                 return {
                     image: base64Image,
-                    width: 595.28,  // Ancho completo A4
-                    height: 841.89, // Alto completo A4 (puede distorsionar)
+                    width: 595.28,   // Ancho completo
+                    height: 800,     // Altura específica (ajusta este número)
                     alignment: 'center',
                     pageBreak: index > 0 ? 'before' : null
                 };
