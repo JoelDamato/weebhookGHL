@@ -4,7 +4,6 @@ const pdfMake = require('pdfmake');
 const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
-const sizeOf = require('image-size'); // Agregar esta línea
 
 exports.handleIaWebhookPdf = async (req, res) => {
     // Array para almacenar todos los logs
@@ -47,42 +46,46 @@ exports.handleIaWebhookPdf = async (req, res) => {
         
         log('Descarga de imágenes completada. Creando PDF...');
 
-        // Convertimos los buffers a base64 para pdfmake Y obtenemos dimensiones
-        const imagesData = responses.map(response => {
+        // Convertimos los buffers a base64 para pdfmake
+        const imagesBase64 = responses.map(response => {
             const buffer = Buffer.from(response.data);
-            const dimensions = sizeOf(buffer); // Obtener dimensiones reales
-            const base64 = `data:${response.headers['content-type']};base64,${buffer.toString('base64')}`;
-            
-            return {
-                base64,
-                width: dimensions.width,
-                height: dimensions.height
-            };
+            return `data:${response.headers['content-type']};base64,${buffer.toString('base64')}`;
         });
 
         // <<<<<<<<<<<<<<<<<<<<< CÓDIGO CORREGIDO PARA PDFMAKE >>>>>>>>>>>>>>>>>>>>>>>
         
-        // <<<<<<<<<<<<<<<<<<<<< CÓDIGO PARA MANTENER TAMAÑO ORIGINAL CON DIMENSIONES REALES >>>>>>>>>>>>>>>>>>>>>>>
+        // <<<<<<<<<<<<<<<<<<<<< CÓDIGO SIMPLIFICADO PARA MANTENER PROPORCIÓN >>>>>>>>>>>>>>>>>>>>>>>
         
-        // Configuración para mantener tamaño original de imágenes con dimensiones reales
+        // Configuración simple que mantiene la proporción de las imágenes
         const documentDefinition = {
-            pageMargins: [0, 0, 0, 0],
-            content: imagesData.map((imageData, index) => {
+            pageSize: 'A4',
+            pageMargins: [0, 0, 0, 0], // Sin márgenes
+            content: imagesBase64.map((base64Image, index) => {
                 return {
-                    image: imageData.base64,
-                    // Usar dimensiones reales (convertir de píxeles a puntos: 1px ≈ 0.75pt)
-                    width: imageData.width * 0.75,
-                    height: imageData.height * 0.75,
+                    image: base64Image,
+                    // Eliminamos width y height para que pdfmake use el tamaño natural
+                    // y solo escale si es necesario para que quepa en la página
                     alignment: 'center',
                     pageBreak: index > 0 ? 'before' : null
                 };
-            }),
-            // Definir tamaño de página basado en la primera imagen
-            pageSize: {
-                width: imagesData[0].width * 0.75,
-                height: imagesData[0].height * 0.75
-            }
+            })
         };
+
+        // ALTERNATIVA: Si quieres forzar un ancho específico manteniendo proporción
+        /*
+        const documentDefinition = {
+            pageSize: 'A4',
+            pageMargins: [10, 10, 10, 10],
+            content: imagesBase64.map((base64Image, index) => {
+                return {
+                    image: base64Image,
+                    width: 575, // Ancho fijo, altura se ajusta automáticamente
+                    alignment: 'center',
+                    pageBreak: index > 0 ? 'before' : null
+                };
+            })
+        };
+        */
         
         // Creamos el PDF
         const printer = new pdfMake({});
