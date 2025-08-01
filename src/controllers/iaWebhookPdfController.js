@@ -8,13 +8,9 @@ const fs = require('fs');
 exports.handleIaWebhookPdf = async (req, res) => {
     try {
         // Extraemos las URLs de las imágenes del cuerpo de la petición.
-        // Ahora usamos las claves con la 'I' mayúscula para que coincidan.
         const { Imagen1, Imagen2, Imagen3, Imagen4 } = req.body;
-        
-        // Creamos un array con las URLs
         const imageUrls = [ Imagen1, Imagen2, Imagen3, Imagen4 ];
 
-        // Verificamos que todas las URLs sean válidas antes de continuar
         if (!imageUrls.every(url => url && typeof url === 'string')) {
             return res.status(400).send('Se esperan 4 URLs de imagen válidas.');
         }
@@ -27,16 +23,22 @@ exports.handleIaWebhookPdf = async (req, res) => {
                 responseType: 'arraybuffer'
             })
         );
-
         const responses = await Promise.all(downloadPromises);
         const imagesBuffers = responses.map(response => Buffer.from(response.data));
 
         console.log('Descarga de imágenes completada, creando PDF...');
 
-        // Creamos un buffer del PDF en memoria
+        // <<<<< CAMBIO CLAVE >>>>>
+        // Configuramos la conversión de forma estática para que la imagen ocupe toda la página.
+        // Aquí pasamos las opciones de configuración directamente a la función convert.
+        const conversionOptions = {
+            pageSize: 'A4',
+            pageMargins: [0, 0, 0, 0] // Margen superior, derecha, inferior, izquierda
+        };
+
         let pdfBuffer = await new Promise((resolve, reject) => {
             const buffers = [];
-            convert(imagesBuffers, 'A4')
+            convert(imagesBuffers, conversionOptions) // Pasamos las opciones aquí
                 .on('data', chunk => buffers.push(chunk))
                 .on('end', () => resolve(Buffer.concat(buffers)))
                 .on('error', reject);
