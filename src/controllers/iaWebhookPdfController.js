@@ -52,18 +52,46 @@ exports.handleIaWebhookPdf = async (req, res) => {
             return `data:${response.headers['content-type']};base64,${buffer.toString('base64')}`;
         });
 
-        // <<<<<<<<<<<<<<<<<<<<< CÓDIGO CLAVE PARA PDFMAKE >>>>>>>>>>>>>>>>>>>>>>>
+        // <<<<<<<<<<<<<<<<<<<<< CÓDIGO CORREGIDO PARA PDFMAKE >>>>>>>>>>>>>>>>>>>>>>>
         
+        // Definimos las dimensiones de la página A4 en puntos
+        const pageWidth = 595.28;
+        const pageHeight = 841.89;
+        const margins = 20; // Margen pequeño para evitar cortes
+        const maxWidth = pageWidth - (margins * 2);
+        const maxHeight = pageHeight - (margins * 2);
+
         // Objeto de definición del documento PDF
         const documentDefinition = {
-            pageSize: 'A4', // Usamos el tamaño de página estándar
-            pageMargins: [0, 0, 0, 0], // Eliminamos los márgenes por completo
+            pageSize: 'A4',
+            pageMargins: [margins, margins, margins, margins], // Márgenes pequeños
             content: imagesBase64.map((base64Image, index) => {
+                // OPCIÓN 1: Ajustar proporcionalmente (recomendado)
                 const imageObject = {
                     image: base64Image,
-                    width: 595.28, // El ancho de una página A4 en puntos (para que ocupe todo el ancho)
-                    pageBreak: index > 0 ? 'before' : null // Añadimos un salto de página después de la primera imagen
+                    fit: [maxWidth, maxHeight], // Ajusta la imagen manteniendo proporción
+                    alignment: 'center',
+                    pageBreak: index > 0 ? 'before' : null
                 };
+
+                /* OPCIÓN 2: Si quieres que las imágenes ocupen todo el ancho
+                const imageObject = {
+                    image: base64Image,
+                    width: maxWidth,
+                    alignment: 'center',
+                    pageBreak: index > 0 ? 'before' : null
+                };
+                */
+
+                /* OPCIÓN 3: Si quieres que las imágenes ocupen toda la altura
+                const imageObject = {
+                    image: base64Image,
+                    height: maxHeight,
+                    alignment: 'center',
+                    pageBreak: index > 0 ? 'before' : null
+                };
+                */
+
                 return imageObject;
             })
         };
@@ -80,7 +108,7 @@ exports.handleIaWebhookPdf = async (req, res) => {
             pdfDoc.end();
         });
 
-        // <<<<<<<<<<<<<<<<<<<<< FIN DEL CÓDIGO CLAVE >>>>>>>>>>>>>>>>>>>>>>>
+        // <<<<<<<<<<<<<<<<<<<<< FIN DEL CÓDIGO CORREGIDO >>>>>>>>>>>>>>>>>>>>>>>
 
         log('PDF creado con éxito. Enviando respuesta...');
 
