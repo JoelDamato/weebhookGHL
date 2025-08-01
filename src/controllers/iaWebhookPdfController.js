@@ -27,24 +27,32 @@ exports.handleIaWebhookPdf = async (req, res) => {
 
         const pdfDoc = await PDFDocument.create();
 
-        for (let i = 0; i < responses.length; i++) {
-    const resized = await sharp(responses[i].data)
-        .resize({ width: 1240 }) // SOLO ancho fijo
+   
+    for (let i = 0; i < responses.length; i++) {
+    const originalBuffer = responses[i].data;
+
+    // Redimensionamos SOLO el ancho, manteniendo el alto proporcional
+    const resizedBuffer = await sharp(originalBuffer)
+        .resize({ width: 1240 }) // NO especificamos height
         .jpeg({ quality: 90 })
         .toBuffer();
 
-    const metadata = await sharp(resized).metadata();
+    // Obtenemos metadatos reales después del resize
+    const metadata = await sharp(resizedBuffer).metadata();
+    const imgWidth = metadata.width;
+    const imgHeight = metadata.height;
 
-    const image = await pdfDoc.embedJpg(resized);
-    const page = pdfDoc.addPage([1240, metadata.height]); // Ajustamos el alto real
+    const image = await pdfDoc.embedJpg(resizedBuffer);
+    const page = pdfDoc.addPage([imgWidth, imgHeight]); // Página del mismo tamaño que la imagen
 
     page.drawImage(image, {
         x: 0,
         y: 0,
-        width: 1240,
-        height: metadata.height,
+        width: imgWidth,
+        height: imgHeight,
     });
 }
+
 
 
         const pdfBytes = await pdfDoc.save();
