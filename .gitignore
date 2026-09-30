@@ -1,2 +1,8 @@
 node_modules/
 .env
+
+# Local exports with contact data; never commit these files.
+conctactGHL.csv
+duplicados_telefono_notion.csv
+ghlcontact.csv
+notion_duplicates.csv
